@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -22,9 +23,18 @@ type DatabaseConfig struct {
 	Loc       string `mapstructure:"loc"`
 }
 
+type JWTConfig struct {
+	Algorithm      string `mapstructure:"algorithm"`
+	Secret         string `mapstructure:"secret"`
+	PrivateKeyPath string `mapstructure:"private_key_path"`
+	PublicKeyPath  string `mapstructure:"public_key_path"`
+	ExpireHours    int    `mapstructure:"expire_hours"`
+}
+
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
 }
 
 var AppConfig Config
@@ -34,6 +44,9 @@ func InitConfig() {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./config")
 
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		log.Fatalf("❌ Failed to read the configuration file: %v", err)
@@ -41,7 +54,18 @@ func InitConfig() {
 
 	err = viper.Unmarshal(&AppConfig)
 	if err != nil {
-		log.Fatalf("❌ Failed to parse the configuration file: %v", err)
+		log.Fatalf("❌ Failed to unmarshal config: %v", err)
+	}
+
+	// env overridesd
+	if s := viper.GetString("JWT_SECRET"); s != "" {
+		AppConfig.JWT.Secret = s
+	}
+	if privateKey := viper.GetString("JWT_PRIVATE_KEY_PATH"); privateKey != "" {
+		AppConfig.JWT.PrivateKeyPath = privateKey
+	}
+	if publicKey := viper.GetString("JWT_PUBLIC_KEY_PATH"); publicKey != "" {
+		AppConfig.JWT.PublicKeyPath = publicKey
 	}
 
 	log.Println("✅ Configuration file loaded successfully")
