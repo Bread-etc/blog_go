@@ -76,7 +76,7 @@ func (p *Post) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-// ⚙ SiteConfig 站点配置表
+// ⚡ SiteConfig 站点配置表
 type SiteConfig struct {
 	ID          string    `gorm:"type:char(36);primaryKey" json:"id"`
 	Title       string    `gorm:"size:100;not null" json:"title"`
