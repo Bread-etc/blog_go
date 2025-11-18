@@ -1,14 +1,21 @@
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
 
-func InitRouter() *gin.Engine {
+func InitRouter(db *gorm.DB) *gin.Engine {
 	// 创建默认的 Gin 引擎
 	r := gin.Default()
 
+	// 注册业务路由, 将 db 实例传递给负责注册具体理由的函数
+	AuthRoutes(r, db)
+	UserRoutes(r, db)
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "Hello Blog!",
+			"message": "Hello Gopher!",
 		})
 	})
 

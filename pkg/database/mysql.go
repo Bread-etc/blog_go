@@ -9,10 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
 // 初始化 mysql 数据库
-func InitMySQL() {
+func InitMySQL() (*gorm.DB, error) {
 	dbConfig := config.AppConfig.Database
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&loc=%s",
 		dbConfig.User,
@@ -25,11 +23,11 @@ func InitMySQL() {
 		dbConfig.Loc,
 	)
 
-	var err error
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("❌ Failed to connect to the database: %v", err)
+		return nil, err
 	}
 
 	log.Println("✅ Database connection successfully!")
+	return db, nil
 }

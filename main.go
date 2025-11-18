@@ -15,10 +15,13 @@ func main() {
 	// 加载配置
 	config.InitConfig()
 	// 初始化数据库连接
-	database.InitMySQL()
+	db, err := database.InitMySQL()
+	if err != nil {
+		log.Fatalf("❌ Failed to connect the database: %v", err)
+	}
 
 	// 自动迁移模型
-	err := database.DB.AutoMigrate(
+	err = db.AutoMigrate(
 		&model.User{},
 		&model.Category{},
 		&model.Tag{},
@@ -43,11 +46,8 @@ func main() {
 	}
 	log.Println("✅ JWT initialized")
 
-	// 初始化默认管理员 (若无用户则创建)
-	// if err := service.Cer
-
 	// 初始化路由
-	r := router.InitRouter()
+	r := router.InitRouter(db)
 	port := config.AppConfig.Server.Port
 	addr := fmt.Sprintf(":%d", port)
 	log.Printf("🚀 Server started at: http://localhost%s successfully!", addr)
