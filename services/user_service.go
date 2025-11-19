@@ -13,6 +13,7 @@ import (
 type IUserService interface {
 	AuthenticateUser(username, password string) (*model.User, error)
 	CreateAdminIfNotExists() error
+	ChangePassword(userID, oldPassword, newPassword string) error
 }
 
 type UserService struct {
@@ -32,11 +33,11 @@ func (us *UserService) AuthenticateUser(username, password string) (*model.User,
 	var user model.User
 
 	if err := us.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		return nil, errors.New("Invalid Credentials")
+		return nil, errors.New("invalid credentials")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return nil, errors.New("Invalid Credentials")
+		return nil, errors.New("invalid credentials")
 	}
 	return &user, nil
 }
@@ -62,4 +63,27 @@ func (us *UserService) CreateAdminIfNotExists() error {
 		return us.DB.Create(&admin).Error
 	}
 	return nil
+}
+
+// ChangePassword 修改密码
+func (us *UserService) ChangePassword(userID, oldPassword, newPassword string) error {
+	var user model.User
+	// 查找用户
+	if err := us.DB.First(&user, "id = ?", userID).Error; err != nil {
+		return errors.New("user not found")
+	}
+
+	// 验证旧密码
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
+		return errors.New("incorrect old password")
+	}
+
+	// 加密新密码
+	newHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	// 更新数据库
+	return us.DB.Model(&user).Update("password", string(newHash)).Error
 }

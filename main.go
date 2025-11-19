@@ -8,7 +8,8 @@ import (
 	"go-blog/model"
 	"go-blog/pkg/database"
 	jwtpkg "go-blog/pkg/jwt"
-	"go-blog/router"
+	router "go-blog/router"
+	service "go-blog/services"
 )
 
 func main() {
@@ -46,7 +47,13 @@ func main() {
 	}
 	log.Println("✅ JWT initialized")
 
-	// 初始化路由
+	// 初始化 Service 并检查 / 创建默认管理员
+	userService := service.NewUserService(db)
+	if err := userService.CreateAdminIfNotExists(); err != nil {
+		log.Printf("❌ Failed to create default adminadministrator: %v", err)
+	} else {
+		log.Println("✅ Default adminadministrator created successfully!")
+	}
 	r := router.InitRouter(db)
 	port := config.AppConfig.Server.Port
 	addr := fmt.Sprintf(":%d", port)

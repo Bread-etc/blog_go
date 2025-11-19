@@ -19,7 +19,13 @@ func UserRoutes(r *gin.Engine, db *gorm.DB) {
 	{
 		// 登录接口 (公开)
 		userGroup.POST("/login", userController.Login)
-		// 个人信息接口 (需要认证)
-		userGroup.GET("/profile", middleware.JWTAuth(), userController.GetProfile)
+
+		// 需要认证的接口组
+		authGroup := userGroup.Group("")
+		authGroup.Use(middleware.JWTAuth())
+		{
+			authGroup.GET("/profile", userController.GetProfile)
+			authGroup.POST("/change-password", userController.ChangePassword)
+		}
 	}
 }
