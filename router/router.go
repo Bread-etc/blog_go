@@ -10,7 +10,6 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	r := gin.Default()
 
 	// 注册业务路由, 将 db 实例传递给负责注册具体理由的函数
-	AuthRoutes(r, db)
 	UserRoutes(r, db)
 
 	r.GET("/ping", func(c *gin.Context) {
