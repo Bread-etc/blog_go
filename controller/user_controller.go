@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	jwtpkg "go-blog/pkg/jwt"
+	"go-blog/pkg/response"
 	service "go-blog/services"
 
 	"github.com/gin-gonic/gin"
@@ -27,23 +28,23 @@ type LoginRequest struct {
 func (uc *UserController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		response.Error(c, http.StatusBadRequest, "Invalid input")
 		return
 	}
 
 	user, err := uc.UserService.AuthenticateUser(req.Username, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+		response.Error(c, http.StatusUnauthorized, "Invalid username or password")
 		return
 	}
 
 	token, err := jwtpkg.GenerateToken(user.ID, user.Username)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to genreate token"})
+		response.Error(c, http.StatusInternalServerError, "Failed to genreate token")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	response.Success(c, gin.H{
 		"token": token,
 		"user": gin.H{
 			"id":       user.ID,
@@ -55,9 +56,9 @@ func (uc *UserController) Login(c *gin.Context) {
 
 // GetProfile 方法获取用户信息
 func (uc *UserController) GetProfile(c *gin.Context) {
-	username := c.GetString("username")
+	username := c.GetString("username") // 暂时未使用的变量，先注释掉或删除
 	userID := c.GetString("userID")
-	c.JSON(http.StatusOK, gin.H{
+	response.Success(c, gin.H{
 		"user_id":  userID,
 		"username": username,
 	})
@@ -72,16 +73,16 @@ type ChangePasswordRequest struct {
 func (uc *UserController) ChangePassword(c *gin.Context) {
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	userID := c.GetString("userID")
 
 	if err := uc.UserService.ChangePassword(userID, req.OldPassword, req.NewPassword); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+	response.Success(c, gin.H{"message": "Password updated successfully"})
 }
