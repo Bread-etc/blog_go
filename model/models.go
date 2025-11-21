@@ -57,6 +57,7 @@ type Post struct {
 	Title       string    `gorm:"size:255;not null" json:"title"`
 	Content     string    `gorm:"type:longtext;not null" json:"content"`
 	Summary     string    `gorm:"type:text" json:"summary"`
+	Slug        string    `gorm:"size:255;unique;index" json:"slug"` // SEO Friendly URL
 	Cover       string    `gorm:"size:255" json:"cover"`
 	CategoryID  string    `gorm:"type:char(36)" json:"category_id"`
 	AuthorID    string    `gorm:"type:char(36)" json:"author_id"`
