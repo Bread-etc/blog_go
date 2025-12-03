@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 // 初始化 mysql 数据库
@@ -23,7 +24,12 @@ func InitMySQL() (*gorm.DB, error) {
 		dbConfig.Loc,
 	)
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			// 使用单数表名 User -> user
+			SingularTable: true,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
