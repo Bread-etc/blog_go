@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"go-blog/pkg/crypto"
 	jwtpkg "go-blog/pkg/jwt"
 	"go-blog/pkg/response"
 	service "go-blog/services"
@@ -24,7 +25,17 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-// Login 方法处理用户登录
+// GetPublicKey 获取公钥接口
+func (uc *UserController) GetPublicKey(c *gin.Context) {
+	pubKey, err := uc.UserService.GetPublicKey()
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to get public key")
+		return
+	}
+	response.Success(c, gin.H{"public_key": pubKey})
+}
+
+// Login 登录接口
 func (uc *UserController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
@@ -32,7 +43,15 @@ func (uc *UserController) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := uc.UserService.AuthenticateUser(req.Username, req.Password)
+	// 解密传入的 RSA 加密后的 Base64 字符串
+	plainPassword, err := crypto.Decrypt(req.Password)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid password encryption")
+		return
+	}
+
+	// 传入解密后的 plainPassword
+	user, err := uc.UserService.AuthenticateUser(req.Username, plainPassword)
 	if err != nil {
 		response.Error(c, http.StatusUnauthorized, "Invalid username or password")
 		return

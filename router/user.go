@@ -10,15 +10,14 @@ import (
 )
 
 func UserRoutes(r *gin.Engine, db *gorm.DB) {
-	// 初始化 Service (注入 DB)
 	userService := service.NewUserService(db)
-	// 初始化 Controller (注入 Service)
 	userController := controller.NewUserController(userService)
 
 	userGroup := r.Group("/api/user")
 	{
-		// 登录接口 (公开)
+		// 公开接口
 		userGroup.POST("/login", userController.Login)
+		userGroup.GET("/public-key", userController.GetPublicKey)
 
 		// 需要认证的接口组
 		authGroup := userGroup.Group("")

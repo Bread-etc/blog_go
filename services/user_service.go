@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"go-blog/model"
+	"go-blog/pkg/crypto"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -14,6 +15,7 @@ type IUserService interface {
 	AuthenticateUser(username, password string) (*model.User, error)
 	CreateAdminIfNotExists() error
 	ChangePassword(userID, oldPassword, newPassword string) error
+	GetPublicKey() (string, error)
 }
 
 type UserService struct {
@@ -25,7 +27,6 @@ func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{DB: db}
 }
 
-// 确保 UserService 实现了 IUserService 接口
 var _ IUserService = (*UserService)(nil)
 
 // AuthenticateUser 验证用户名/密码
@@ -86,4 +87,9 @@ func (us *UserService) ChangePassword(userID, oldPassword, newPassword string) e
 
 	// 更新数据库
 	return us.DB.Model(&user).Update("password", string(newHash)).Error
+}
+
+// GetPublicKey 获取加密公钥
+func (us *UserService) GetPublicKey() (string, error) {
+	return crypto.GetPublicKey()
 }
