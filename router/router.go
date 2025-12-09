@@ -11,6 +11,7 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 
 	// 注册业务路由, 将 db 实例传递给负责注册具体理由的函数
 	UserRoutes(r, db)
+	PostRouter(r, db)
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
