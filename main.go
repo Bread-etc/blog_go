@@ -6,6 +6,7 @@ import (
 
 	"go-blog/config"
 	"go-blog/model"
+	crypto "go-blog/pkg/crypto"
 	"go-blog/pkg/database"
 	jwtpkg "go-blog/pkg/jwt"
 	router "go-blog/router"
@@ -46,6 +47,12 @@ func main() {
 		log.Fatalf("❌ Failed to init JWT: %v", err)
 	}
 	log.Println("✅ JWT initialized")
+
+	// 初始化 RSA 密钥对
+	if err := crypto.InitRSAKeyPair(); err != nil {
+		log.Fatalf("❌ Failed to init RSA KeyPair: %v", err)
+	}
+	log.Println("✅ RSA KeyPair initialized")
 
 	// 初始化 Service 并检查 / 创建默认管理员
 	userService := service.NewUserService(db)
