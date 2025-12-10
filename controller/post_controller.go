@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"go-blog/model"
 	"go-blog/pkg/response"
 	service "go-blog/services"
@@ -76,7 +77,7 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 	}
 
 	if err := pc.PostService.CreatePost(post, req.TagIDs); err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to create post: "+err.Error())
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to create post: %v", err.Error()))
 		return
 	}
 
@@ -94,7 +95,7 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 
 	post, err := pc.PostService.GetPostByID(id)
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "Post not found")
+		response.Error(c, http.StatusNotFound, fmt.Sprintf("Post not found: %v", err))
 		return
 	}
 
@@ -131,7 +132,7 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 	}
 
 	if err := pc.PostService.UpdatePost(post, req.TagIDs); err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to update post: "+err.Error())
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update post: %v", err.Error()))
 		return
 	}
 	response.Success(c, nil)
@@ -141,7 +142,7 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 func (pc *PostController) GetPostList(c *gin.Context) {
 	var req PostListRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid query parameters")
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid query parameters: %v", err))
 		return
 	}
 
@@ -156,7 +157,7 @@ func (pc *PostController) GetPostList(c *gin.Context) {
 
 	posts, total, err := pc.PostService.GetPostList(serviceReq)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to fetch posts")
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to fetch posts: %v", err))
 		return
 	}
 	response.Success(c, gin.H{
@@ -172,7 +173,7 @@ func (pc *PostController) GetPostDetail(c *gin.Context) {
 	slug := c.Param("slug") // 使用 slug 获取
 	post, err := pc.PostService.GetPostBySlug(slug)
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "Post not found")
+		response.Error(c, http.StatusNotFound, fmt.Sprintf("Post not found: %v", err))
 		return
 	}
 
@@ -188,7 +189,7 @@ func (pc *PostController) GetPostDetail(c *gin.Context) {
 func (pc *PostController) DeletePost(c *gin.Context) {
 	id := c.Param("id")
 	if err := pc.PostService.DeletePost(id); err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to delete post")
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete post: %v", err))
 		return
 	}
 	response.Success(c, nil)

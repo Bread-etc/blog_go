@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"go-blog/pkg/crypto"
@@ -29,7 +30,7 @@ type LoginRequest struct {
 func (uc *UserController) GetPublicKey(c *gin.Context) {
 	pubKey, err := uc.UserService.GetPublicKey()
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to get public key")
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to get public key: %v", err))
 		return
 	}
 	response.Success(c, gin.H{"public_key": pubKey})
@@ -39,27 +40,27 @@ func (uc *UserController) GetPublicKey(c *gin.Context) {
 func (uc *UserController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid input")
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid input: %v", err))
 		return
 	}
 
 	// 解密传入的 RSA 加密后的 Base64 字符串
 	plainPassword, err := crypto.Decrypt(req.Password)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid password encryption")
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid password encryption: %v", err))
 		return
 	}
 
 	// 传入解密后的 plainPassword
 	user, err := uc.UserService.AuthenticateUser(req.Username, plainPassword)
 	if err != nil {
-		response.Error(c, http.StatusUnauthorized, "Invalid username or password")
+		response.Error(c, http.StatusUnauthorized, fmt.Sprintf("Invalid username or password: %v", err))
 		return
 	}
 
 	token, err := jwtpkg.GenerateToken(user.ID, user.Username)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Failed to genreate token")
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to genreate token: %v", err))
 		return
 	}
 
