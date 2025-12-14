@@ -48,7 +48,7 @@ func (cc *CategoryController) CreateCategory(c *gin.Context) {
 	response.Success(c, category)
 }
 
-// UpdateCategory 更新
+// UpdateCategory 更新分类
 func (cc *CategoryController) UpdateCategory(c *gin.Context) {
 	id := c.Param("id")
 	var req CreateCategoryRequest // 复用结构体
@@ -64,7 +64,7 @@ func (cc *CategoryController) UpdateCategory(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// DeleteCategory 删除
+// DeleteCategory 删除分类
 func (cc *CategoryController) DeleteCategory(c *gin.Context) {
 	id := c.Param("id")
 	if err := cc.CategoryService.DeleteCategory(id); err != nil {
