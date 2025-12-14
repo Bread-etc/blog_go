@@ -13,6 +13,7 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	UserRoutes(r, db)
 	PostRouter(r, db)
 	CategoryRouter(r, db)
+	TagRouter(r, db)
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
