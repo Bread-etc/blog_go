@@ -38,7 +38,7 @@ func (cs *CategoryService) CreateCategory(name, slug string) (*model.Category, e
 
 // GetCategoryList 获取全部分类
 func (cs *CategoryService) GetCategoryList() ([]model.Category, error) {
-	var categories []model.Category
+	categories := make([]model.Category, 0)
 	if err := cs.DB.Order("created_at desc").Find(&categories).Error; err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (cs *CategoryService) GetCategoryList() ([]model.Category, error) {
 
 // UpdateCategory 更新分类
 func (cs *CategoryService) UpdateCategory(id, name, slug string) error {
-	return cs.DB.Model(&model.Category{}).Where("id = ?", id).Updates(map[string]interface{}{
+	return cs.DB.Model(&model.Category{}).Where("id = ?", id).Updates(map[string]any{
 		"name": name,
 		"slug": slug,
 	}).Error

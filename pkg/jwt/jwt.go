@@ -94,7 +94,7 @@ func ParseToken(tokenString string) (*Claims, error) {
 	}
 	claims := &Claims{}
 
-	keyFunc := func(token *jwt.Token) (interface{}, error) {
+	keyFunc := func(token *jwt.Token) (any, error) {
 		// 根据算法验证
 		if cfg.Algorithm == "RS256" {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {

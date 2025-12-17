@@ -108,7 +108,7 @@ func (ps *PostService) GetPostBySlug(slug string) (*model.Post, error) {
 
 // GetPostList 获取文章列表 (支持分页、筛选、搜索)
 func (ps *PostService) GetPostList(req *PostListReq) ([]model.Post, int64, error) {
-	var posts []model.Post
+	posts := make([]model.Post, 0)
 	var total int64
 
 	db := ps.DB.Model(&model.Post{})

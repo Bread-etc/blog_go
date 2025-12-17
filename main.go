@@ -59,7 +59,7 @@ func main() {
 	if err := userService.CreateAdminIfNotExists(); err != nil {
 		log.Printf("❌ Failed to create default adminadministrator: %v", err)
 	} else {
-		log.Println("✅ Default adminadministrator created successfully!")
+		log.Println("✅ Default administrator created successfully!")
 	}
 	r := router.InitRouter(db)
 	port := config.AppConfig.Server.Port

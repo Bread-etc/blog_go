@@ -37,7 +37,7 @@ func (ts *TagService) CreateTag(name, slug string) (*model.Tag, error) {
 
 // GetTagList 获取全部标签
 func (ts *TagService) GetTagList() ([]model.Tag, error) {
-	var tags []model.Tag
+	tags := make([]model.Tag, 0)
 	// 按创建时间排序
 	if err := ts.DB.Order("created_at desc").Find(&tags).Error; err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (ts *TagService) GetTagList() ([]model.Tag, error) {
 
 // UpdateTag 更新标签
 func (ts *TagService) UpdateTag(id, name, slug string) error {
-	return ts.DB.Model(&model.Tag{}).Where("id = ?", id).Updates(map[string]interface{}{
+	return ts.DB.Model(&model.Tag{}).Where("id = ?", id).Updates(map[string]any{
 		"name": name,
 		"slug": slug,
 	}).Error
