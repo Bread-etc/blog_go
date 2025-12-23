@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 	"go-blog/config"
-	"log"
+	"go-blog/pkg/logger"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -34,6 +34,6 @@ func InitMySQL() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	log.Println("✅ Database connection successfully!")
+	logger.Log.Infof("✅ Database connection successfully!")
 	return db, nil
 }
