@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"go-blog/config"
 	"go-blog/model"
 	crypto "go-blog/pkg/crypto"
 	"go-blog/pkg/database"
 	jwtpkg "go-blog/pkg/jwt"
+	"go-blog/pkg/logger"
 	router "go-blog/router"
 	service "go-blog/services"
 )
@@ -16,10 +16,11 @@ import (
 func main() {
 	// 加载配置
 	config.InitConfig()
+	logger.InitLogger("logs/server.log", "debug")
 	// 初始化数据库连接
 	db, err := database.InitMySQL()
 	if err != nil {
-		log.Fatalf("❌ Failed to connect the database: %v", err)
+		logger.Log.Errorf("❌ Failed to connect the database: %v", err)
 	}
 
 	// 自动迁移模型
@@ -31,9 +32,9 @@ func main() {
 		&model.SiteConfig{},
 	)
 	if err != nil {
-		log.Fatalf("❌ Data table migration failed: %v", err)
+		logger.Log.Errorf("❌ Data table migration failed: %v", err)
 	}
-	log.Println("✅ Data table migration successfully!")
+	logger.Log.Infof("✅ Data table migration successfully!")
 
 	// 初始化 JWT
 	jcfg := &jwtpkg.Config{
@@ -44,26 +45,27 @@ func main() {
 		ExpireHours:    config.AppConfig.JWT.ExpireHours,
 	}
 	if err := jwtpkg.Init(jcfg); err != nil {
-		log.Fatalf("❌ Failed to init JWT: %v", err)
+		logger.Log.Errorf("❌ Failed to init JWT: %v", err)
 	}
-	log.Println("✅ JWT initialized")
+	logger.Log.Infof("✅ JWT initialized successfully!")
 
 	// 初始化 RSA 密钥对
 	if err := crypto.InitRSAKeyPair(); err != nil {
-		log.Fatalf("❌ Failed to init RSA KeyPair: %v", err)
+		logger.Log.Errorf("❌ Failed to init RSA KeyPair: %v", err)
 	}
-	log.Println("✅ RSA KeyPair initialized")
+	logger.Log.Infof("✅ RSA KeyPair initialized sucessfully!")
 
 	// 初始化 Service 并检查 / 创建默认管理员
 	userService := service.NewUserService(db)
 	if err := userService.CreateAdminIfNotExists(); err != nil {
-		log.Printf("❌ Failed to create default adminadministrator: %v", err)
+		logger.Log.Errorf("❌ Failed to create default adminadministrator: %v", err)
 	} else {
-		log.Println("✅ Default administrator created successfully!")
+		logger.Log.Infof("✅ Default administrator created successfully!")
 	}
+
 	r := router.InitRouter(db)
 	port := config.AppConfig.Server.Port
 	addr := fmt.Sprintf(":%d", port)
-	log.Printf("🚀 Server started at: http://localhost%s successfully!", addr)
+	logger.Log.Infof("🚀 Server started at: http://localhost%s successfully!", addr)
 	r.Run(addr)
 }
