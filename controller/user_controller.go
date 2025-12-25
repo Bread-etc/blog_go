@@ -31,12 +31,11 @@ type LoginRequest struct {
 func (uc *UserController) GetPublicKey(c *gin.Context) {
 	pubKey, err := uc.UserService.GetPublicKey()
 	if err != nil {
-		logger.Log.Errorf("GetPublicKey service error: %v", err.Error())
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to get public key: %v", err.Error()))
+		logger.Log.Errorf("GetPublicKey service error: %v", err)
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to get public key: %v", err))
 		return
 	}
 
-	logger.Log.Infof("Public key fetched successfully!")
 	response.Success(c, gin.H{"public_key": pubKey})
 }
 
@@ -44,35 +43,34 @@ func (uc *UserController) GetPublicKey(c *gin.Context) {
 func (uc *UserController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		logger.Log.Warnf("Login bind failed: %v", err.Error())
-		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid input: %v", err.Error()))
+		logger.Log.Warnf("Login bind failed: %v", err)
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid input: %v", err))
 		return
 	}
 
 	// 解密传入的 RSA 加密后的 Base64 字符串
 	plainPassword, err := crypto.Decrypt(req.Password)
 	if err != nil {
-		logger.Log.Warnf("Decrypt password failed: %v", err.Error())
-		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid password encryption: %v", err.Error()))
+		logger.Log.Warnf("Decrypt password failed: %v", err)
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid password encryption: %v", err))
 		return
 	}
 
 	// 传入解密后的 plainPassword
 	user, err := uc.UserService.AuthenticateUser(req.Username, plainPassword)
 	if err != nil {
-		logger.Log.Errorf("Login service failed: %v", err.Error())
-		response.Error(c, http.StatusUnauthorized, fmt.Sprintf("Invalid username or password: %v", err.Error()))
+		logger.Log.Errorf("Login service failed: %v", err)
+		response.Error(c, http.StatusUnauthorized, fmt.Sprintf("Invalid username or password: %v", err))
 		return
 	}
 
 	token, err := jwtpkg.GenerateToken(user.ID, user.Username)
 	if err != nil {
-		logger.Log.Errorf("Generate token failed: %v", err.Error())
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to genreate token: %v", err.Error()))
+		logger.Log.Errorf("Generate token failed: %v", err)
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to genreate token: %v", err))
 		return
 	}
 
-	logger.Log.Infof("Log in successfully: %s (%s)!", user.Username, user.ID)
 	response.Success(c, gin.H{
 		"token": token,
 		"user": gin.H{
@@ -88,7 +86,6 @@ func (uc *UserController) GetProfile(c *gin.Context) {
 	username := c.GetString("username")
 	userID := c.GetString("userID")
 
-	logger.Log.Infof("Profile fetched successfully!")
 	response.Success(c, gin.H{
 		"user_id":  userID,
 		"username": username,
@@ -104,7 +101,7 @@ type ChangePasswordRequest struct {
 func (uc *UserController) ChangePassword(c *gin.Context) {
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("ChangePassword bind failed: %v", err.Error())
+		logger.Log.Warnf("ChangePassword bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -112,11 +109,10 @@ func (uc *UserController) ChangePassword(c *gin.Context) {
 	userID := c.GetString("userID")
 
 	if err := uc.UserService.ChangePassword(userID, req.OldPassword, req.NewPassword); err != nil {
-		logger.Log.Errorf("ChangePassword service error: %v", err.Error())
+		logger.Log.Errorf("ChangePassword service error: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	logger.Log.Infof("Change password successfully!")
 	response.Success(c, gin.H{"message": "Password updated successfully"})
 }

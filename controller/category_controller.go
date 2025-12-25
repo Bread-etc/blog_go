@@ -27,12 +27,11 @@ type CreateCategoryRequest struct {
 func (cc *CategoryController) GetCategoryList(c *gin.Context) {
 	list, err := cc.CategoryService.GetCategoryList()
 	if err != nil {
-		logger.Log.Errorf("GetCategoryList service error: %v", err.Error())
+		logger.Log.Errorf("GetCategoryList service error: %v", err)
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	logger.Log.Infof("CategoryList fetched successfully!")
 	response.Success(c, list)
 }
 
@@ -40,19 +39,18 @@ func (cc *CategoryController) GetCategoryList(c *gin.Context) {
 func (cc *CategoryController) CreateCategory(c *gin.Context) {
 	var req CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("CreateCategory bind failed: %v", err.Error())
+		logger.Log.Warnf("CreateCategory bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	category, err := cc.CategoryService.CreateCategory(req.Name, req.Slug)
 	if err != nil {
-		logger.Log.Errorf("CreateCategory service error: %v", err.Error())
+		logger.Log.Errorf("CreateCategory service error: %v", err)
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	logger.Log.Infof("Category created successfully: %s (%s)!", category.Name, category.ID)
 	response.Success(c, category)
 }
 
@@ -61,18 +59,17 @@ func (cc *CategoryController) UpdateCategory(c *gin.Context) {
 	id := c.Param("id")
 	var req CreateCategoryRequest // 复用结构体
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("UpdateCategory bind failed: %v", err.Error())
+		logger.Log.Warnf("UpdateCategory bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := cc.CategoryService.UpdateCategory(id, req.Name, req.Slug); err != nil {
-		logger.Log.Errorf("UpdateCategory service error: %v", err.Error())
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update category: %v", err.Error()))
+		logger.Log.Errorf("UpdateCategory service error: %v", err)
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update category: %v", err))
 		return
 	}
 
-	logger.Log.Infof("Category updated successfully: %s (%s)!", req.Name, id)
 	response.Success(c, nil)
 }
 
@@ -80,11 +77,10 @@ func (cc *CategoryController) UpdateCategory(c *gin.Context) {
 func (cc *CategoryController) DeleteCategory(c *gin.Context) {
 	id := c.Param("id")
 	if err := cc.CategoryService.DeleteCategory(id); err != nil {
-		logger.Log.Errorf("DeleteCategory service error: %v", err.Error())
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete category: %v", err.Error()))
+		logger.Log.Errorf("DeleteCategory service error: %v", err)
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete category: %v", err))
 		return
 	}
 
-	logger.Log.Infof("Category deleted successfully: %s!", id)
 	response.Success(c, nil)
 }

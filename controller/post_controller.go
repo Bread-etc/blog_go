@@ -54,7 +54,7 @@ type PostListRequest struct {
 func (pc *PostController) CreatePost(c *gin.Context) {
 	var req CreatePostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("CreatePost bind failed: %v", err.Error())
+		logger.Log.Warnf("CreatePost bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -79,12 +79,11 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 	}
 
 	if err := pc.PostService.CreatePost(post, req.TagIDs); err != nil {
-		logger.Log.Errorf("CreatePost service error: %v", err.Error())
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to create post: %v", err.Error()))
+		logger.Log.Errorf("CreatePost service error: %v", err)
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to create post: %v", err))
 		return
 	}
 
-	logger.Log.Infof("Post created successfully: %s (%s)!", post.Title, post.ID)
 	response.Success(c, gin.H{"id": post.ID})
 }
 
@@ -93,15 +92,15 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 	id := c.Param("id")
 	var req UpdatePostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("UpdatePost bind failed: %v", err.Error())
+		logger.Log.Warnf("UpdatePost bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	post, err := pc.PostService.GetPostByID(id)
 	if err != nil {
-		logger.Log.Errorf("UpdatePost service error: %v", err.Error())
-		response.Error(c, http.StatusNotFound, fmt.Sprintf("Post not found: %v", err.Error()))
+		logger.Log.Errorf("UpdatePost service error: %v", err)
+		response.Error(c, http.StatusNotFound, fmt.Sprintf("Post not found: %v", err))
 		return
 	}
 
@@ -139,12 +138,11 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 	}
 
 	if err := pc.PostService.UpdatePost(post, req.TagIDs); err != nil {
-		logger.Log.Warnf("UpdatePost service error: %v", err.Error())
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update post: %v", err.Error()))
+		logger.Log.Warnf("UpdatePost service error: %v", err)
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update post: %v", err))
 		return
 	}
 
-	logger.Log.Infof("Post updated successfully: %s (%s)!", req.Title, id)
 	response.Success(c, nil)
 }
 
@@ -152,8 +150,8 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 func (pc *PostController) GetPostList(c *gin.Context) {
 	var req PostListRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		logger.Log.Warnf("GetPostList bind failed: %v", err.Error())
-		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid query parameters: %v", err.Error()))
+		logger.Log.Warnf("GetPostList bind failed: %v", err)
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid query parameters: %v", err))
 		return
 	}
 
@@ -168,12 +166,11 @@ func (pc *PostController) GetPostList(c *gin.Context) {
 
 	posts, total, err := pc.PostService.GetPostList(serviceReq)
 	if err != nil {
-		logger.Log.Errorf("GetPostList service error: %v", err.Error())
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to fetch posts: %v", err.Error()))
+		logger.Log.Errorf("GetPostList service error: %v", err)
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to fetch posts: %v", err))
 		return
 	}
 
-	logger.Log.Infof("PostList fetched successfully!")
 	response.Success(c, gin.H{
 		"list":  posts,
 		"total": total,
@@ -187,8 +184,8 @@ func (pc *PostController) GetPostDetail(c *gin.Context) {
 	slug := c.Param("slug") // 使用 slug 获取
 	post, err := pc.PostService.GetPostBySlug(slug)
 	if err != nil {
-		logger.Log.Warnf("Post not found: %v", err.Error())
-		response.Error(c, http.StatusNotFound, fmt.Sprintf("Post not found: %v", err.Error()))
+		logger.Log.Warnf("Post not found: %v", err)
+		response.Error(c, http.StatusNotFound, fmt.Sprintf("Post not found: %v", err))
 		return
 	}
 
@@ -197,7 +194,6 @@ func (pc *PostController) GetPostDetail(c *gin.Context) {
 		_ = pc.PostService.IncrementView(post.ID)
 	}()
 
-	logger.Log.Infof("Post detail fetched successfully!")
 	response.Success(c, post)
 }
 
@@ -205,11 +201,10 @@ func (pc *PostController) GetPostDetail(c *gin.Context) {
 func (pc *PostController) DeletePost(c *gin.Context) {
 	id := c.Param("id")
 	if err := pc.PostService.DeletePost(id); err != nil {
-		logger.Log.Errorf("DeletePost service error: %v", err.Error())
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete post: %v", err.Error()))
+		logger.Log.Errorf("DeletePost service error: %v", err)
+		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete post: %v", err))
 		return
 	}
 
-	logger.Log.Infof("Post deleted successfully: %s!", id)
 	response.Success(c, nil)
 }
