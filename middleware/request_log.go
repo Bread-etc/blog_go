@@ -14,10 +14,10 @@ func RequestLog() gin.HandlerFunc {
 		c.Next()
 
 		duration := time.Since(startTime)
-		stauts := c.Writer.Status()
+		status := c.Writer.Status()
 		// 记录日志
 		logger.Log.Infof("[HTTP] %d | %12v | %15s | %-7s %s",
-			stauts,
+			status,
 			duration,
 			c.ClientIP(),
 			c.Request.Method,
