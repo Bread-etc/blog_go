@@ -14,11 +14,13 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	r.Use(middleware.Recovery())
 	r.Use(middleware.RequestLog())
 
-	// 注册业务路由, 将 db 实例传递给负责注册具体理由的函数
+	// 注册业务路由
 	UserRoutes(r, db)
 	PostRouter(r, db)
 	CategoryRouter(r, db)
 	TagRouter(r, db)
+	LinkRouter(r, db)
+	ConfigRouter(r, db)
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
