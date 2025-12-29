@@ -1,7 +1,7 @@
 package config
 
 import (
-	"go-blog/pkg/logger"
+	"log"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -49,12 +49,12 @@ func InitConfig() {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		logger.Log.Errorf("❌ Failed to read the configuration file: %v", err)
+		log.Fatalf("❌ Failed to read the configuration file: %v", err)
 	}
 
 	err = viper.Unmarshal(&AppConfig)
 	if err != nil {
-		logger.Log.Errorf("❌ Failed to unmarshal config: %v", err)
+		log.Fatalf("❌ Failed to unmarshal config: %v", err)
 	}
 
 	// env overridesd
@@ -68,5 +68,5 @@ func InitConfig() {
 		AppConfig.JWT.PublicKeyPath = publicKey
 	}
 
-	logger.Log.Infof("✅ Configuration file loaded successfully!")
+	log.Println("✅ Configuration file loaded successfully!")
 }
