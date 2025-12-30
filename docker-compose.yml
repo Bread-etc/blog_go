@@ -1,0 +1,52 @@
+version: "3"
+
+services:
+  server:
+    build: .
+    image: blog-go:v1.0
+    container_name: blog-server
+    restart: always
+    ports:
+      # 宿主机端口:容器端口
+      - "${APP_PORT}:${APP_PORT}"
+    volumes:
+      # 日志存放目录
+      - ./logs:/app/logs
+      # 配置挂载
+      - ./config/config.yaml:/app/config/config.yaml
+    depends_on:
+      - db
+    networks:
+      - blog-net
+    environment:
+      - SERVER_PORT=${APP_PORT}
+      - DATABASE_HOST=${DB_HOST}
+      - DATABASE_PORT=${DB_PORT}
+      - DATABASE_USER=${DB_USER}
+      - DATABASE_PASSWORD=${DB_PASSWORD}
+      - DATABASE_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - DATABASE_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - TZ=${TZ}
+
+  # MYSQL 数据库
+  db:
+    image: mysql:8.4
+    container_name: blog-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TZ}
+    volumes:
+      # 数据持久化
+      - db_data:/var/lib/mysql
+    networks:
+      - blog-net
+
+volumes:
+  db_data:
+networks:
+  blog-net:

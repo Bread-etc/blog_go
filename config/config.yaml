@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+database:
+  host: db
+  port: 3306
+  user: root
+  password: your_real_password
+  name: blog
+  charset: utf8mb4
+  parseTime: true
+  loc: Local
+
+jwt:
+  algorithm: "RS256"
+  secret: ""
+  private_key_path: "./keys/private.pem"
+  public_key_path: "./keys/public.pem"
+  expire_hours: 24
