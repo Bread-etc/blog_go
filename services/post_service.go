@@ -39,20 +39,28 @@ var _ IPostService = (*PostService)(nil)
 // CreatePost 创建文章
 func (ps *PostService) CreatePost(post *model.Post, tagIDs []string) error {
 	return ps.DB.Transaction(func(tx *gorm.DB) error {
+		// 1. 先创建文章 (忽略关联，避免 GORM 自动处理带来的不可控问题)
+		if err := tx.Omit("Tags").Create(post).Error; err != nil {
+			return err
+		}
+
+		// 2. 如果有标签，显式建立关联
 		if len(tagIDs) > 0 {
 			var tags []model.Tag
 			if err := tx.Where("id in ?", tagIDs).Find(&tags).Error; err != nil {
 				return err
 			}
 			if len(tags) != len(tagIDs) {
+				// 如果标签数量不一致，说明有 ID 不存在
 				return errors.New("some tags do not exist")
 			}
-			post.Tags = tags
+			// 使用 Association 替换关联，这是最稳妥的方式
+			// 使用 SkipHooks 避免触发 Tag 的 BeforeCreate 导致生成新 ID
+			if err := tx.Session(&gorm.Session{SkipHooks: true}).Model(post).Association("Tags").Replace(tags); err != nil {
+				return err
+			}
 		}
 
-		if err := tx.Create(post).Error; err != nil {
-			return err
-		}
 		return nil
 	})
 }
