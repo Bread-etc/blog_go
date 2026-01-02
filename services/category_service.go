@@ -56,7 +56,9 @@ func (cs *CategoryService) UpdateCategory(id, name, slug string) error {
 // DeleteCategory 删除分类
 func (cs *CategoryService) DeleteCategory(id string) error {
 	var count int64
-	cs.DB.Model(&model.Category{}).Where("category_id = ?", id).Count(&count)
+	if err := cs.DB.Model(&model.Post{}).Where("category_id = ?", id).Count(&count).Error; err != nil {
+		return err
+	}
 	if count > 0 {
 		return errors.New("cannot delete category with associated posts")
 	}
