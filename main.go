@@ -101,6 +101,8 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Log.Fatalf("❌ Server Shutdown (Force): %s", err)
 	}
+	sqlDB, _ := db.DB()
+	_ = sqlDB.Close()
 
 	logger.Log.Infof("✅ Server exiting")
 }
