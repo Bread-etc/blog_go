@@ -1,0 +1,93 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  # 运行单元测试
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.25"
+
+      - name: Run Unit Tests
+        run: |
+          go test -v ./services/...
+
+  # 构建并推送 Docker 镜像
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' # PR 时不推送镜像
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/blog-go:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blog-go:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blog-go:buildcache,mode=max
+
+  # 部署到服务器
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 拷贝配置文件到服务器
+      - name: Copy Config Files
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          # 将 docker-compose.yml 和 Caddyfile 和 config 目录拷贝过去
+          source: "docker-compose.yml,Caddyfile,config/config.yaml"
+          target: "/opt/blog_go"
+          # 保持目录结构
+          strip_components: 0
+
+      # 远程重启容器
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: |
+            cd /opt/blog_go
+
+            # 确保目录存在
+            mkdir -p logs
+            mkdir -p frontend/dist
+
+            # 拉取刚刚构建好的最新镜像
+            docker compose pull server
+
+            # 重启服务 (Up -d 会重建容器并启动)
+            docker compose up -d
+
+            # 清理掉旧的镜像，防止磁盘占满
+            docker image prune -f

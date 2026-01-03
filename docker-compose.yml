@@ -23,7 +23,7 @@ services:
 
   server:
     build: .
-    image: blog-go:v1.0
+    image: breadetc/blog-go:latest
     container_name: blog-server
     restart: always
     expose:
