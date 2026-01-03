@@ -1,39 +1,40 @@
-# 1. 编译 (Builder)
+# Build Stage
 FROM golang:1.25 AS builder
 
+# 设置环境变量
 ENV GO111MODULE=on \
-  GOPROXY=https://goproxy.cn,direct
-
-WORKDIR /build
-
-COPY go.mod go.sum ./
-RUN go mod download
-
-# 拷贝所有源码
-COPY . .
-
-# CGO_ENABLED=0: 禁用 CGO，生成纯静态二进制文件，兼容性最好
-# GOOS=linux: 目标是 Linux
-RUN CGO_ENABLED=0 GOOS=linux go build -o blog-server main.go
-
-# 2. 运行阶段 (Runner)
-FROM debian:bookworm-slim
-
-# 安装证书
-RUN apt-get update && apt-get install -y ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
-ENV TZ=Asia/Shanghai
+  GOPROXY=https://goproxy.io,direct \
+  CGO_ENABLED=0 \
+  GOOS=linux \
+  GOARCH=amd64
 
 WORKDIR /app
 
-# 从 builder 拷贝编译好的程序
-COPY --from=builder /build/blog-server .
-# 拷贝配置文件
-RUN mkdir config
-COPY config/config.yaml config/
+# 缓存依赖
+COPY go.mod go.sum ./
+RUN go mod download
 
-# 创建日志目录
+# 编译
+COPY . .
+RUN go build -ldflags="-s -w" -o blog-server .
+
+# Run Stage
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+# 安装必要的系统证书 & 清理缓存 / 设置时区
+RUN apt-get update && apt-get install -y ca-certificates tzdata && \
+  rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Asia/Shanghai
+
+# 复制二进制和配置文件
+COPY --from=builder /app/blog-server .
+COPY config/config.yaml config/config.yaml
+
 RUN mkdir logs
 
 EXPOSE 8080
 
-ENTRYPOINT [ "./blog-server" ]
+CMD ["./blog-server"]

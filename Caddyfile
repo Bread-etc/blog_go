@@ -1,0 +1,17 @@
+hastur23.top {
+    # 后端 API
+    handle /api/* {
+        reverse_proxy server:8080
+    }
+
+    # 前端静态文件
+    handle {
+        # /srv/dist 对应容器内的路径
+        root * /srv/dist
+
+        # 404 回退 index.html
+        try_files {path} /index.html
+
+        file_server
+    }
+}

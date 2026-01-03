@@ -1,35 +1,50 @@
 version: "3"
 
 services:
+  # 反向代理 & HTTPS 自动配置
+  caddy:
+    image: caddy:latest
+    container_name: blog-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      # 前端部署时，将 dist 目录挂载进去
+      # - ./frontend/dist:/srv/dist
+    depends_on:
+      - server
+    networks:
+      - blog-net
+  # 服务器配置
+
   server:
     build: .
     image: blog-go:v1.0
     container_name: blog-server
     restart: always
-    ports:
-      # 宿主机端口:容器端口
-      - "${APP_PORT}:${APP_PORT}"
+    expose:
+      - "8080"
     volumes:
-      # 日志存放目录
       - ./logs:/app/logs
-      # 配置挂载
       - ./config/config.yaml:/app/config/config.yaml
     depends_on:
       - db
     networks:
       - blog-net
     environment:
-      - SERVER_PORT=${APP_PORT}
-      - DATABASE_HOST=${DB_HOST}
-      - DATABASE_PORT=${DB_PORT}
+      - SERVER_PORT=8080
+      - DATABASE_HOST=db
+      - DATABASE_PORT=3306
       - DATABASE_USER=${DB_USER}
       - DATABASE_PASSWORD=${DB_PASSWORD}
-      - DATABASE_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - DATABASE_NAME=${DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
-      - TZ=${TZ}
+  # 数据库配置
 
-  # MYSQL 数据库
   db:
     image: mysql:8.4
     container_name: blog-mysql
@@ -39,14 +54,17 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
-      TZ: ${TZ}
+      TZ: Asia/Shanghai
     volumes:
-      # 数据持久化
       - db_data:/var/lib/mysql
     networks:
       - blog-net
 
 volumes:
   db_data:
+  caddy_data:
+  caddy_config:
+
 networks:
   blog-net:
+    driver: bridge
