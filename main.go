@@ -22,7 +22,7 @@ import (
 func main() {
 	// 加载配置
 	config.InitConfig()
-	logger.InitLogger("logs/server.log", "debug")
+	logger.InitLogger("logs/server.log", "info")
 	// 初始化数据库连接
 	db, err := database.InitMySQL()
 	if err != nil {
