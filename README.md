@@ -1,6 +1,6 @@
 # blog_go
 
-基于 `Go` + `Gin` + `GORM` + `MySQL` 构建的博客后端。本项目集成了`CI/CD`流程、`Docker`容器化部署方案。
+基于 `Go` + `Gin` + `GORM` + `MySQL` 构建的博客后端，本项目集成了`CI/CD`流程、`Docker`容器化部署方案。
 
 ## 🛠 技术栈
 
@@ -46,8 +46,8 @@ cd blog_go
 
 ### 2. 配置环境
 
-在项目根目录创建 `.env` 文件 (可参考 config.yaml 结构，或者直接修改 config/config.yaml 用于本地调试)。
-**注意**: 不要将包含真实密码的 `.env` 提交到版本控制。
+在项目根目录创建 `.env` 文件 (可参考 config.yaml 结构，或者直接修改 config/config.yaml 用于本地调试)
+**注意**: 不要将包含真实密码的 `.env` 提交到版本控制
 
 ### 3. 运行程序
 
@@ -59,7 +59,7 @@ go mod tidy
 go run main.go
 ```
 
-服务默认运行在 `http://localhost:8080`。
+服务默认运行在 `http://localhost:8080`
 
 ### 4. 运行单元测试
 
@@ -70,28 +70,28 @@ go test -v ./services/...
 
 ## 🐳 Docker 部署 (生产环境)
 
-本项目使用 Docker Compose 进行一键部署，自动包含 **MySQL** 和 **Caddy** (反向代理)。
+本项目使用 Docker Compose 进行一键部署，自动包含 **MySQL** 和 **Caddy** (反向代理)
 
 ```bash
 # 构建并启动所有服务
 docker compose up -d --build
 ```
 
-启动后，Caddy 会自动为你的域名申请 HTTPS 证书。
+启动后，Caddy 会自动为你的域名申请 HTTPS 证书
 
 - API 接口: `https://your-domain.com/api`
 - 健康检查: `https://your-domain.com/api/health`
 
 ## 🔄 CI/CD 工作流
 
-本项目配置了 **GitHub Actions** 实现自动化部署。
+本项目配置了 **GitHub Actions** 实现自动化部署
 
-1.  **自动测试 (Test)**: 任意分支的 Push 都会触发单元测试，确保代码质量。
-2.  **自动发布 (Deploy)**: 只有 **Master** 分支且提交信息包含触发关键字时，才会执行构建与部署。
+1.  **自动测试 (Test)**: 任意分支的 Push 都会触发单元测试，确保代码质量
+2.  **自动发布 (Deploy)**: 只有 **Master** 分支且提交信息包含触发关键字时，才会执行构建与部署
 
 ### 如何触发自动发布？
 
-在提交代码时，Commit Message 需要包含 `build(version)`。
+在提交代码时，Commit Message 需要包含 `build(version)`
 
 示例：
 
