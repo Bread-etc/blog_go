@@ -3,8 +3,9 @@ name: CI/CD Pipeline
 on:
   push:
     branches: ["master"]
-  pull_request:
-    branches: ["master"]
+    # 当 docs/CHANGELOG.md 文件发生变更时，触发 CI/CD
+    paths:
+      - "docs/CHANGELOG.md"
 
 jobs:
   # 运行单元测试
@@ -27,7 +28,7 @@ jobs:
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'build(version)')
+    if: github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
