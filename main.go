@@ -1,7 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"go-blog/config"
 	"go-blog/model"
@@ -66,6 +72,35 @@ func main() {
 	r := router.InitRouter(db)
 	port := config.AppConfig.Server.Port
 	addr := fmt.Sprintf(":%d", port)
-	logger.Log.Infof("🚀 Server started at: http://localhost%s successfully!", addr)
-	r.Run(addr)
+
+	// 创建 HTTP Server
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
+	}
+
+	// 在 Goroutine 中启动服务器
+	go func() {
+		logger.Log.Infof("🚀 Server started at: http://localhost%s", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Log.Fatalf("❌ Listen: %s\n", err)
+		}
+	}()
+
+	// 优雅关闭（设置 5 秒的超时时间）
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	logger.Log.Infof("⛔️ Shutting down server...")
+
+	// 创建一个 5 秒超时的 Context
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Shutdown 会等待活跃连接完成，然后关闭
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Log.Fatalf("❌ Server Shutdown (Force): %s", err)
+	}
+
+	logger.Log.Infof("✅ Server exiting")
 }
