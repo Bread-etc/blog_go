@@ -23,11 +23,11 @@
 ├── pkg/                # 公共工具包
 ├── router/             # 路由定义
 ├── services/           # 业务逻辑层 & 单元测试
-├── .github/workflows/  # CI/CD 配置
-├── Caddyfile           # Caddy 反向代理配置
+├── .github/workflows/  # CI/CD
+├── Caddyfile           # Caddy 反向代理
 ├── Dockerfile          # docker镜像配置
-├── docker-compose.yml  # 容器编排配置
-└── main.go             # 入口
+├── docker-compose.yml  # 容器编排
+└── main.go             # 应用入口
 ```
 
 ## 🚀 快速开始
@@ -86,8 +86,12 @@ docker compose up -d --build
 
 本项目配置了 **GitHub Actions** 实现自动化部署
 
-1.  **自动测试 (Test)**: 修改版本变更文档`CHANGELOG.md`会触发单元测试，确保代码质量
-2.  **自动发布 (Deploy)**: 只有 **Master** 分支且提交信息时，才会执行构建与部署
+1.  **自动测试 (Test)**: 任意分支的合并并修改 CHANGLOG.md 都会触发单元测试，确保代码质量
+2.  **自动发布 (Deploy)**: 只有 **Master** 分支且提交信息包含触发关键字时，才会执行构建与部署
+
+### 如何触发自动发布？
+
+在提交代码时，Commit Message 包含 `build(version)`，且改动 `CHANGELOG.md` 文件
 
 示例：
 
