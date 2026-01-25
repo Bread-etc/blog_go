@@ -26,7 +26,7 @@ func main() {
 	// 初始化数据库连接
 	db, err := database.InitMySQL()
 	if err != nil {
-		logger.Log.Errorf("❌ Failed to connect the database: %v", err)
+		logger.Log.Fatalf("❌ Failed to connect the database: %v", err)
 	}
 
 	// 自动迁移模型
@@ -36,9 +36,10 @@ func main() {
 		&model.Tag{},
 		&model.Post{},
 		&model.SiteConfig{},
+		&model.Link{},
 	)
 	if err != nil {
-		logger.Log.Errorf("❌ Data table migration failed: %v", err)
+		logger.Log.Fatalf("❌ Data table migration failed: %v", err)
 	}
 	logger.Log.Infof("✅ Data table migration successfully!")
 
@@ -51,13 +52,13 @@ func main() {
 		ExpireHours:    config.AppConfig.JWT.ExpireHours,
 	}
 	if err := jwtpkg.Init(jcfg); err != nil {
-		logger.Log.Errorf("❌ Failed to init JWT: %v", err)
+		logger.Log.Fatalf("❌ Failed to init JWT: %v", err)
 	}
 	logger.Log.Infof("✅ JWT initialized successfully!")
 
 	// 初始化 RSA 密钥对
 	if err := crypto.InitRSAKeyPair(); err != nil {
-		logger.Log.Errorf("❌ Failed to init RSA KeyPair: %v", err)
+		logger.Log.Fatalf("❌ Failed to init RSA KeyPair: %v", err)
 	}
 	logger.Log.Infof("✅ RSA KeyPair initialized sucessfully!")
 
