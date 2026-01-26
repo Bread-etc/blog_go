@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   # 反向代理 & HTTPS 自动配置
   caddy:
