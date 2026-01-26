@@ -11,6 +11,7 @@
 ### 📦 构建相关 Build
 
 - 新增`docker-compose`添加`keys`目录挂载，修复找不到公私钥的问题
+- 删除docker头部无用的version字段
 
 ## [v1.0.1] - 2026-01-03
 
