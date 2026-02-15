@@ -42,7 +42,7 @@ func (uc *UserController) GetPublicKey(c *gin.Context) {
 // Login 登录接口
 func (uc *UserController) Login(c *gin.Context) {
 	var req LoginRequest
-	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Log.Warnf("Login bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid input: %v", err))
 		return
