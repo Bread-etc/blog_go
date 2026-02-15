@@ -1,5 +1,11 @@
 # 变更日志 (Changelog)
 
+## [v1.0.3] - 2026-02-16
+
+### 🛠️ 问题修复 Bugfixes
+
+- 修复登录接口获取请求体异常问题，将`ShouldBindWithJSON`改为`ShouldBindJSON`
+
 ## [v1.0.2] - 2026-01-26
 
 ### 🛠️ 问题修复 Bugfixes
