@@ -108,7 +108,21 @@ func (uc *UserController) ChangePassword(c *gin.Context) {
 
 	userID := c.GetString("userID")
 
-	if err := uc.UserService.ChangePassword(userID, req.OldPassword, req.NewPassword); err != nil {
+	oldPlain, err := crypto.Decrypt(req.OldPassword)
+	if err != nil {
+		logger.Log.Warnf("Decrypt password failed: %v", err)
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid password encryption: %v", err))
+		return
+	}
+
+	newPlain, err := crypto.Decrypt(req.NewPassword)
+	if err != nil {
+		logger.Log.Warnf("Decrypt password failed: %v", err)
+		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid password encryption: %v", err))
+		return
+	}
+
+	if err := uc.UserService.ChangePassword(userID, oldPlain, newPlain); err != nil {
 		logger.Log.Errorf("ChangePassword service error: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
