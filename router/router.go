@@ -2,6 +2,7 @@ package router
 
 import (
 	"go-blog/middleware"
+	"go-blog/pkg/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,23 +28,17 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 		// 检查数据库连接
 		sqlDB, err := db.DB()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"status": "DOWN",
-				"error":  "DB connection failed",
-			})
+			response.Error(c, http.StatusInternalServerError, "Database handle failed")
 			return
 		}
 		if err := sqlDB.Ping(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"status": "DOWN",
-				"error":  "DB ping failed",
-			})
+			response.Error(c, http.StatusInternalServerError, "Database connection failed")
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"status": "UP",
-			"error":  nil,
+		response.Success(c, gin.H{
+			"status":   "UP",
+			"database": "connected",
 		})
 	})
 
