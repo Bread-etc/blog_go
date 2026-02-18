@@ -2,6 +2,7 @@
 
 后端地址: `https://hastur23.top`
 认证方式: Header `Authorization: Bearer <token>`
+响应格式：统一响应格式 `{ code: number; message: string; data: T }`
 
 ## 1. 用户 (User)
 
