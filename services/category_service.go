@@ -2,15 +2,16 @@ package service
 
 import (
 	"errors"
+	"go-blog/dto"
 	"go-blog/model"
 
 	"gorm.io/gorm"
 )
 
 type ICategoryService interface {
-	CreateCategory(name, slug string) (*model.Category, error)
-	GetCategoryList() ([]model.Category, error)
-	UpdateCategory(id, name, slug string) error
+	CreateCategory(req *dto.CreateCategoryReq) (*dto.CategoryBrief, error)
+	GetCategoryList() ([]dto.CategoryBrief, error)
+	UpdateCategory(id string, req *dto.UpdateCategoryReq) error
 	DeleteCategory(id string) error
 }
 
@@ -25,31 +26,38 @@ func NewCategoryService(db *gorm.DB) *CategoryService {
 var _ ICategoryService = (*CategoryService)(nil)
 
 // CreateCategory 创建分类
-func (cs *CategoryService) CreateCategory(name, slug string) (*model.Category, error) {
+func (cs *CategoryService) CreateCategory(req *dto.CreateCategoryReq) (*dto.CategoryBrief, error) {
 	category := &model.Category{
-		Name: name,
-		Slug: slug,
+		Name: req.Name,
+		Slug: req.Slug,
 	}
 	if err := cs.DB.Create(category).Error; err != nil {
 		return nil, err
 	}
-	return category, nil
+	brief := toCategoryBrief(*category)
+	return &brief, nil
 }
 
 // GetCategoryList 获取全部分类
-func (cs *CategoryService) GetCategoryList() ([]model.Category, error) {
-	categories := make([]model.Category, 0)
+func (cs *CategoryService) GetCategoryList() ([]dto.CategoryBrief, error) {
+	var categories []model.Category
 	if err := cs.DB.Order("created_at desc").Find(&categories).Error; err != nil {
 		return nil, err
 	}
-	return categories, nil
+
+	// 映射到 DTO
+	items := make([]dto.CategoryBrief, 0, len(categories))
+	for _, c := range categories {
+		items = append(items, toCategoryBrief(c))
+	}
+	return items, nil
 }
 
 // UpdateCategory 更新分类
-func (cs *CategoryService) UpdateCategory(id, name, slug string) error {
+func (cs *CategoryService) UpdateCategory(id string, req *dto.UpdateCategoryReq) error {
 	return cs.DB.Model(&model.Category{}).Where("id = ?", id).Updates(map[string]any{
-		"name": name,
-		"slug": slug,
+		"name": req.Name,
+		"slug": req.Slug,
 	}).Error
 }
 
@@ -63,4 +71,13 @@ func (cs *CategoryService) DeleteCategory(id string) error {
 		return errors.New("cannot delete category with associated posts")
 	}
 	return cs.DB.Delete(&model.Category{}, "id = ?", id).Error
+}
+
+// 内部函数：model 转化为 DTO
+func toCategoryBrief(c model.Category) dto.CategoryBrief {
+	return dto.CategoryBrief{
+		ID:   c.ID,
+		Name: c.Name,
+		Slug: c.Slug,
+	}
 }

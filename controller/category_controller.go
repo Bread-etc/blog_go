@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"go-blog/dto"
 	"go-blog/pkg/logger"
 	"go-blog/pkg/response"
 	service "go-blog/services"
@@ -18,11 +19,6 @@ func NewCategoryController(categoryService service.ICategoryService) *CategoryCo
 	return &CategoryController{CategoryService: categoryService}
 }
 
-type CreateCategoryRequest struct {
-	Name string `json:"name" binding:"required"`
-	Slug string `json:"slug" binding:"required"`
-}
-
 // GetCategoryList 获取分类列表
 func (cc *CategoryController) GetCategoryList(c *gin.Context) {
 	list, err := cc.CategoryService.GetCategoryList()
@@ -37,14 +33,14 @@ func (cc *CategoryController) GetCategoryList(c *gin.Context) {
 
 // CreateCategory 创建分类
 func (cc *CategoryController) CreateCategory(c *gin.Context) {
-	var req CreateCategoryRequest
+	var req dto.CreateCategoryReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Log.Warnf("CreateCategory bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	category, err := cc.CategoryService.CreateCategory(req.Name, req.Slug)
+	category, err := cc.CategoryService.CreateCategory(&req)
 	if err != nil {
 		logger.Log.Errorf("CreateCategory service error: %v", err)
 		response.Error(c, http.StatusInternalServerError, err.Error())
@@ -57,14 +53,14 @@ func (cc *CategoryController) CreateCategory(c *gin.Context) {
 // UpdateCategory 更新分类
 func (cc *CategoryController) UpdateCategory(c *gin.Context) {
 	id := c.Param("id")
-	var req CreateCategoryRequest // 复用结构体
+	var req dto.UpdateCategoryReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Log.Warnf("UpdateCategory bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if err := cc.CategoryService.UpdateCategory(id, req.Name, req.Slug); err != nil {
+	if err := cc.CategoryService.UpdateCategory(id, &req); err != nil {
 		logger.Log.Errorf("UpdateCategory service error: %v", err)
 		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update category: %v", err))
 		return
