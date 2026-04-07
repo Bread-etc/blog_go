@@ -1,6 +1,7 @@
 package service
 
 import (
+	"go-blog/dto"
 	"go-blog/model"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestTagService_Create(t *testing.T) {
 	svc := NewTagService(db)
 
 	// Case 1: 正常创建
-	_, err := svc.CreateTag("Golang", "golang-slug")
+	_, err := svc.CreateTag(&dto.CreateTagReq{Name: "Golang", Slug: "golang-slug"})
 	assert.NoError(t, err)
 
 	// 验证库
@@ -37,11 +38,11 @@ func TestTagService_Create(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// Case 2: 名字重复
-	_, err = svc.CreateTag("Golang", "golang-duplicate")
+	_, err = svc.CreateTag(&dto.CreateTagReq{Name: "Golang", Slug: "golang-duplicate"})
 	assert.Error(t, err)
 
 	// Case 3: slug重复
-	_, err = svc.CreateTag("gin", "golang-slug")
+	_, err = svc.CreateTag(&dto.CreateTagReq{Name: "gin", Slug: "golang-slug"})
 	assert.Error(t, err)
 }
 
@@ -50,8 +51,8 @@ func TestTagService_GetList(t *testing.T) {
 	svc := NewTagService(db)
 
 	// 准备数据
-	svc.CreateTag("Java", "java")
-	svc.CreateTag("Python", "py")
+	svc.CreateTag(&dto.CreateTagReq{Name: "Java", Slug: "java"})
+	svc.CreateTag(&dto.CreateTagReq{Name: "Python", Slug: "py"})
 
 	// 测试查询
 	list, err := svc.GetTagList()
@@ -69,12 +70,12 @@ func TestTagService_Update(t *testing.T) {
 	svc := NewTagService(db)
 
 	// 准备数据
-	svc.CreateTag("OldName", "olg-slug")
+	svc.CreateTag(&dto.CreateTagReq{Name: "OldName", Slug: "olg-slug"})
 	var tag model.Tag
 	db.First(&tag, "name = ?", "OldName")
 
 	// 测试更新
-	err := svc.UpdateTag(tag.ID, "NewName", "new-slug")
+	err := svc.UpdateTag(tag.ID, &dto.UpdateTagReq{Name: "NewName", Slug: "new-slug"})
 	assert.NoError(t, err)
 
 	// 验证
@@ -89,7 +90,7 @@ func TestTagService_Delete(t *testing.T) {
 	svc := NewTagService(db)
 
 	// 1. 准备一个空标签
-	svc.CreateTag("EmptyTag", "empty")
+	svc.CreateTag(&dto.CreateTagReq{Name: "EmptyTag", Slug: "empty"})
 	var tag model.Tag
 	db.First(&tag, "name = ?", "EmptyTag")
 

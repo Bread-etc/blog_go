@@ -1,15 +1,16 @@
 package service
 
 import (
+	"go-blog/dto"
 	"go-blog/model"
 
 	"gorm.io/gorm"
 )
 
 type ITagService interface {
-	CreateTag(name, slug string) (*model.Tag, error)
-	GetTagList() ([]model.Tag, error)
-	UpdateTag(id, name, slug string) error
+	CreateTag(req *dto.CreateTagReq) (*dto.TagBrief, error)
+	GetTagList() ([]dto.TagBrief, error)
+	UpdateTag(id string, req *dto.UpdateTagReq) error
 	DeleteTag(id string) error
 }
 
@@ -24,36 +25,52 @@ func NewTagService(db *gorm.DB) *TagService {
 var _ ITagService = (*TagService)(nil)
 
 // CreateTag 创建标签
-func (ts *TagService) CreateTag(name, slug string) (*model.Tag, error) {
+func (ts *TagService) CreateTag(req *dto.CreateTagReq) (*dto.TagBrief, error) {
 	tag := &model.Tag{
-		Name: name,
-		Slug: slug,
+		Name: req.Name,
+		Slug: req.Slug,
 	}
 	if err := ts.DB.Create(tag).Error; err != nil {
 		return nil, err
 	}
-	return tag, nil
+	brief := toTagBrief(*tag)
+	return &brief, nil
 }
 
 // GetTagList 获取全部标签
-func (ts *TagService) GetTagList() ([]model.Tag, error) {
-	tags := make([]model.Tag, 0)
+func (ts *TagService) GetTagList() ([]dto.TagBrief, error) {
+	var tags []model.Tag
 	// 按创建时间排序
 	if err := ts.DB.Order("created_at desc").Find(&tags).Error; err != nil {
 		return nil, err
 	}
-	return tags, nil
+
+	// 映射到 DTO
+	items := make([]dto.TagBrief, 0, len(tags))
+	for _, t := range tags {
+		items = append(items, toTagBrief(t))
+	}
+	return items, nil
 }
 
 // UpdateTag 更新标签
-func (ts *TagService) UpdateTag(id, name, slug string) error {
+func (ts *TagService) UpdateTag(id string, req *dto.UpdateTagReq) error {
 	return ts.DB.Model(&model.Tag{}).Where("id = ?", id).Updates(map[string]any{
-		"name": name,
-		"slug": slug,
+		"name": req.Name,
+		"slug": req.Slug,
 	}).Error
 }
 
 // DeleteTag 删除标签
 func (ts *TagService) DeleteTag(id string) error {
 	return ts.DB.Delete(&model.Tag{}, "id = ?", id).Error
+}
+
+// 内部函数：model 转化为 DTO
+func toTagBrief(t model.Tag) dto.TagBrief {
+	return dto.TagBrief{
+		ID:   t.ID,
+		Name: t.Name,
+		Slug: t.Slug,
+	}
 }
