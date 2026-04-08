@@ -1,6 +1,7 @@
 package service
 
 import (
+	"go-blog/dto"
 	"go-blog/model"
 	"testing"
 
@@ -27,13 +28,13 @@ func TestLinkService_Create(t *testing.T) {
 	db := setupLinkTestDB()
 	svc := NewLinkService(db)
 
-	link := &model.Link{
+	req := &dto.CreateLinkReq{
 		Name: "Google",
 		URL:  "https://google.com",
 		Sort: 10,
 	}
 
-	err := svc.CreateLink(link)
+	_, err := svc.CreateLink(req)
 	assert.NoError(t, err)
 
 	// 验证入库
@@ -46,9 +47,9 @@ func TestLinkService_GetList(t *testing.T) {
 	db := setupLinkTestDB()
 	svc := NewLinkService(db)
 
-	svc.CreateLink(&model.Link{Name: "B", Sort: 2})
-	svc.CreateLink(&model.Link{Name: "A", Sort: 1})
-	svc.CreateLink(&model.Link{Name: "C", Sort: 3})
+	svc.CreateLink(&dto.CreateLinkReq{Name: "B", Sort: 2})
+	svc.CreateLink(&dto.CreateLinkReq{Name: "A", Sort: 1})
+	svc.CreateLink(&dto.CreateLinkReq{Name: "C", Sort: 3})
 	list, err := svc.GetLinkList()
 	assert.NoError(t, err)
 	assert.Len(t, list, 3)
@@ -63,18 +64,25 @@ func TestLinkService_Update(t *testing.T) {
 	db := setupLinkTestDB()
 	svc := NewLinkService(db)
 
-	link := &model.Link{Name: "Old", URL: "http://old.com"}
-	svc.CreateLink(link)
+	// 先创建一条记录（仍然使用 DTO）
+	createReq := &dto.CreateLinkReq{
+		Name: "Old",
+		URL:  "http://old.com",
+	}
+	created, err := svc.CreateLink(createReq)
+	assert.NoError(t, err)
 
-	// 更新
-	link.Name = "New"
-	link.Sort = 99
-	err := svc.UpdateLink(link.ID, link)
+	// 更新：构造 UpdateLinkReq
+	updateReq := &dto.UpdateLinkReq{
+		Name: "New",
+		Sort: 99,
+	}
+	err = svc.UpdateLink(created.ID, updateReq)
 	assert.NoError(t, err)
 
 	// 验证
 	var updated model.Link
-	db.First(&updated, "id = ?", link.ID)
+	db.First(&updated, "id = ?", created.ID)
 	assert.Equal(t, "New", updated.Name)
 	assert.Equal(t, 99, updated.Sort)
 }
@@ -82,14 +90,21 @@ func TestLinkService_Update(t *testing.T) {
 func TestLinkService_Delete(t *testing.T) {
 	db := setupLinkTestDB()
 	svc := NewLinkService(db)
-	link := &model.Link{Name: "Del", URL: "http://del.com"}
-	svc.CreateLink(link)
+
+	// 创建待删除的记录（使用 DTO）
+	req := &dto.CreateLinkReq{
+		Name: "Del",
+		URL:  "http://del.com",
+	}
+	created, err := svc.CreateLink(req)
+	assert.NoError(t, err)
 
 	// 删除
-	err := svc.DeleteLink(link.ID)
+	err = svc.DeleteLink(created.ID)
 	assert.NoError(t, err)
-	// 验证查不到了
-	err = db.First(&model.Link{}, "id = ?", link.ID).Error
+
+	// 验证已删除
+	err = db.First(&model.Link{}, "id = ?", created.ID).Error
 	assert.Error(t, err)
 	assert.Equal(t, gorm.ErrRecordNotFound, err)
 }
