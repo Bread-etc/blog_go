@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"go-blog/model"
+	"go-blog/dto"
 	"go-blog/pkg/logger"
 	"go-blog/pkg/response"
 	service "go-blog/services"
@@ -32,7 +32,7 @@ func (cc *ConfigController) GetConfig(c *gin.Context) {
 
 // UpdateConfig
 func (cc *ConfigController) UpdateConfig(c *gin.Context) {
-	var req model.SiteConfig
+	var req dto.SaveConfigReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Log.Warnf("UpdateConfig bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())

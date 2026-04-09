@@ -1,6 +1,7 @@
 package service
 
 import (
+	"go-blog/dto"
 	"go-blog/model"
 	"testing"
 
@@ -43,7 +44,7 @@ func TestConfigService_Update(t *testing.T) {
 	svc := NewConfigService(db)
 
 	// Case 1: 首次更新 (相当于创建)
-	newCfg := &model.SiteConfig{
+	newCfg := &dto.SaveConfigReq{
 		Title:       "First Title",
 		Description: "Hello",
 	}
@@ -60,7 +61,7 @@ func TestConfigService_Update(t *testing.T) {
 	assert.Equal(t, "First Title", saved.Title)
 
 	// Case 2: 二次更新 (修改)
-	updateCfg := &model.SiteConfig{
+	updateCfg := &dto.SaveConfigReq{
 		Title:       "Updated Title",
 		Description: "World",
 	}
