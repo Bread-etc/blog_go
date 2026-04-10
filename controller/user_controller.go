@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"go-blog/dto"
 	"go-blog/pkg/crypto"
 	jwtpkg "go-blog/pkg/jwt"
 	"go-blog/pkg/logger"
@@ -22,11 +23,6 @@ func NewUserController(userService service.IUserService) *UserController {
 	return &UserController{UserService: userService}
 }
 
-type LoginRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 // GetPublicKey 获取公钥接口
 func (uc *UserController) GetPublicKey(c *gin.Context) {
 	pubKey, err := uc.UserService.GetPublicKey()
@@ -41,7 +37,7 @@ func (uc *UserController) GetPublicKey(c *gin.Context) {
 
 // Login 登录接口
 func (uc *UserController) Login(c *gin.Context) {
-	var req LoginRequest
+	var req dto.LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Log.Warnf("Login bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid input: %v", err))
@@ -71,12 +67,12 @@ func (uc *UserController) Login(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
-		"token": token,
-		"user": gin.H{
-			"id":       user.ID,
-			"username": user.Username,
-			"role":     user.Role,
+	response.Success(c, dto.LoginResp{
+		Token: token,
+		User: dto.UserBrief{
+			ID:       user.ID,
+			Username: user.Username,
+			Role:     user.Role,
 		},
 	})
 }
@@ -86,20 +82,15 @@ func (uc *UserController) GetProfile(c *gin.Context) {
 	username := c.GetString("username")
 	userID := c.GetString("userID")
 
-	response.Success(c, gin.H{
-		"user_id":  userID,
-		"username": username,
+	response.Success(c, dto.UserBrief{
+		ID:       userID,
+		Username: username,
 	})
-}
-
-type ChangePasswordRequest struct {
-	OldPassword string `json:"old_password" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required,min=6"`
 }
 
 // ChangePassword 修改密码接口
 func (uc *UserController) ChangePassword(c *gin.Context) {
-	var req ChangePasswordRequest
+	var req dto.ChangePasswordReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Log.Warnf("ChangePassword bind failed: %v", err)
 		response.Error(c, http.StatusBadRequest, err.Error())
