@@ -1,4 +1,4 @@
-# API 接口参考文档 (v1.0.1)
+# API 接口参考文档 (v1.1.0)
 
 后端地址: `https://hastur23.top`
 认证方式: Header `Authorization: Bearer <token>`
@@ -13,7 +13,7 @@
 
 ## 2. 文章 (Post)
 
-- **GET** `/api/posts`: 获取文章列表 (分页, 筛选: category_id, tag_id, keyword)
+- **GET** `/api/posts`: 获取文章列表 (分页, 筛选: category_id, tag_ids (支持多标签数组), keyword)
 - **GET** `/api/posts/:slug`: 获取文章详情 (通过 Slug)
 - **POST** `/api/posts`: 创建文章 [Auth]
 - **PUT** `/api/posts/:id`: 更新文章 [Auth]
@@ -45,6 +45,11 @@
 - **GET** `/api/config`: 获取站点配置 (Title, Desc, etc.)
 - **PUT** `/api/config`: 更新站点配置 [Auth]
 
-## 7. 系统
+## 7. 数据看板 (Dashboard)
+
+- **GET** `/api/dashboard/stats`: 获取核心数据面板统计及月增幅 (总文章/分类/标签/友链数与浏览量) [Auth]
+- **GET** `/api/dashboard/top-posts`: 获取按浏览量倒序排行的热门文章列表缩略信息 [Auth]
+
+## 8. 系统
 
 - **GET** `/api/health`: 健康检查
