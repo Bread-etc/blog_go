@@ -2,27 +2,19 @@ package service
 
 import (
 	"errors"
+	"go-blog/dto"
 	"go-blog/model"
 
 	"gorm.io/gorm"
 )
 
-type PostListReq struct {
-	Page        int
-	PageSize    int
-	CategoryID  string
-	TagID       string
-	KeyWord     string
-	IsPublished *bool // 指针允许传递 nil (不筛选)
-}
-
 type IPostService interface {
 	CreatePost(post *model.Post, tagIDs []string) error
 	UpdatePost(post *model.Post, tagIDs []string) error
 	DeletePost(id string) error
-	GetPostByID(id string) (*model.Post, error)
-	GetPostBySlug(slug string) (*model.Post, error)
-	GetPostList(req *PostListReq) ([]model.Post, int64, error)
+	GetPostByID(id string) (*model.Post, error) // 内部使用
+	GetPostBySlug(slug string) (*dto.PostDetailResp, error)
+	GetPostList(req *dto.PostListQueryReq) ([]dto.PostListItemResp, int64, error)
 	IncrementView(id string) error
 }
 
@@ -105,18 +97,19 @@ func (ps *PostService) GetPostByID(id string) (*model.Post, error) {
 }
 
 // GetPostBySlug 根据 Slug 获取文章 (SEO)
-func (ps *PostService) GetPostBySlug(slug string) (*model.Post, error) {
+func (ps *PostService) GetPostBySlug(slug string) (*dto.PostDetailResp, error) {
 	var post model.Post
 	err := ps.DB.Preload("Category").Preload("Author").Preload("Tags").First(&post, "slug = ?", slug).Error
 	if err != nil {
 		return nil, err
 	}
-	return &post, nil
+	detail := toPostDetail(post)
+	return &detail, nil
 }
 
 // GetPostList 获取文章列表 (支持分页、筛选、搜索)
-func (ps *PostService) GetPostList(req *PostListReq) ([]model.Post, int64, error) {
-	posts := make([]model.Post, 0)
+func (ps *PostService) GetPostList(req *dto.PostListQueryReq) ([]dto.PostListItemResp, int64, error) {
+	var rawPosts []model.Post
 	var total int64
 
 	db := ps.DB.Model(&model.Post{})
@@ -128,15 +121,16 @@ func (ps *PostService) GetPostList(req *PostListReq) ([]model.Post, int64, error
 	if req.IsPublished != nil {
 		db = db.Where("is_published = ?", req.IsPublished)
 	}
-	if req.KeyWord != "" {
+	if req.Keyword != "" {
 		// 模糊搜索标题或内容
-		db = db.Where("title like ? or content like ?", "%"+req.KeyWord+"%", "%"+req.KeyWord+"%")
+		db = db.Where("title like ? or content like ?", "%"+req.Keyword+"%", "%"+req.Keyword+"%")
 	}
 
-	// 2. 标签筛选 (需要联表)
-	if req.TagID != "" {
-		// 子查询：筛选出包含指定 TagID 的 PostID
-		db = db.Joins("join post_tags on post_tags.post_id = posts.id").Where("post_tags.tag_id = ?", req.TagID)
+	// 2. 标签交集筛选
+	if len(req.TagIDs) > 0 {
+		// 子查询：筛选出包含所有选定 tag_id 的 post_id
+		subQuery := ps.DB.Table("post_tags").Select("post_id").Where("tag_id IN ?", req.TagIDs).Group("post_id").Having("COUNT(DISTINCT tag_id) = ?", len(req.TagIDs))
+		db = db.Where("posts.id IN (?)", subQuery)
 	}
 
 	// 3. 计算总数 (在分页之前)
@@ -148,15 +142,76 @@ func (ps *PostService) GetPostList(req *PostListReq) ([]model.Post, int64, error
 	offset := (req.Page - 1) * req.PageSize
 
 	// Omit("Content")：列表页通常无需加载长文本，提升性能
-	err := db.Offset(offset).Limit(req.PageSize).Order("created_at DESC").Preload("Category").Preload("Author").Preload("Tags").Omit("Content").Find(&posts).Error
+	err := db.Offset(offset).Limit(req.PageSize).Order("created_at DESC").Preload("Category").Preload("Author").Preload("Tags").Omit("Content").Find(&rawPosts).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return posts, total, nil
+	// 映射到 DTO
+	items := make([]dto.PostListItemResp, 0, len(rawPosts))
+	for _, p := range rawPosts {
+		items = append(items, toPostListItem(p))
+	}
+
+	return items, total, nil
 }
 
 // IncrementView 增加浏览量
 func (ps *PostService) IncrementView(id string) error {
 	return ps.DB.Model(&model.Post{}).Where("id = ?", id).UpdateColumn("views", gorm.Expr("views + ?", 1)).Error
+}
+
+// 内部函数：model 转化为 列表 DTO
+func toPostListItem(p model.Post) dto.PostListItemResp {
+	var views uint
+	if p.Views != nil {
+		views = *p.Views
+	}
+
+	tags := make([]dto.TagBrief, 0, len(p.Tags))
+	for _, t := range p.Tags {
+		tags = append(tags, dto.TagBrief{ID: t.ID, Name: t.Name, Slug: t.Slug})
+	}
+
+	return dto.PostListItemResp{
+		ID:          p.ID,
+		Title:       p.Title,
+		Summary:     p.Summary,
+		Slug:        p.Slug,
+		Cover:       p.Cover,
+		Views:       views,
+		IsPublished: p.IsPublished != nil && *p.IsPublished,
+		CreatedAt:   p.CreatedAt,
+		UpdatedAt:   p.UpdatedAt,
+		Category:    dto.CategoryBrief{ID: p.CategoryID, Name: p.Category.Name, Slug: p.Category.Slug},
+		Tags:        tags,
+	}
+}
+
+// 内部函数：model 转化为 详情 DTO
+func toPostDetail(p model.Post) dto.PostDetailResp {
+	var views uint
+	if p.Views != nil {
+		views = *p.Views
+	}
+
+	tags := make([]dto.TagBrief, 0, len(p.Tags))
+	for _, t := range p.Tags {
+		tags = append(tags, dto.TagBrief{ID: t.ID, Name: t.Name, Slug: t.Slug})
+	}
+
+	return dto.PostDetailResp{
+		ID:          p.ID,
+		Title:       p.Title,
+		Content:     p.Content,
+		Summary:     p.Summary,
+		Slug:        p.Slug,
+		Cover:       p.Cover,
+		Views:       views,
+		IsPublished: p.IsPublished != nil && *p.IsPublished,
+		CreatedAt:   p.CreatedAt,
+		UpdatedAt:   p.UpdatedAt,
+		Category:    dto.CategoryBrief{ID: p.Category.ID, Name: p.Category.Name, Slug: p.Category.Slug},
+		Tags:        tags,
+	}
 }

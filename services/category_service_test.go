@@ -1,6 +1,7 @@
 package service
 
 import (
+	"go-blog/dto"
 	"go-blog/model"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestCategoryService_Create(t *testing.T) {
 	svc := NewCategoryService(db)
 
 	// Case 1: 正常创建
-	_, err := svc.CreateCategory("Golang", "golang-notes")
+	_, err := svc.CreateCategory(&dto.CreateCategoryReq{Name: "Golang", Slug: "golang-notes"})
 	assert.NoError(t, err)
 
 	// 验证库
@@ -37,11 +38,11 @@ func TestCategoryService_Create(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// Case 2: 名字重复
-	_, err = svc.CreateCategory("Golang", "golang-duplicate")
+	_, err = svc.CreateCategory(&dto.CreateCategoryReq{Name: "Golang", Slug: "golang-duplicate"})
 	assert.Error(t, err)
 
 	// Case 3: slug重复
-	_, err = svc.CreateCategory("Gin", "golang-notes")
+	_, err = svc.CreateCategory(&dto.CreateCategoryReq{Name: "Gin", Slug: "golang-notes"})
 	assert.Error(t, err)
 }
 
@@ -50,8 +51,8 @@ func TestCategoryService_GetList(t *testing.T) {
 	svc := NewCategoryService(db)
 
 	// 准备数据
-	svc.CreateCategory("Java", "java")
-	svc.CreateCategory("Python", "py")
+	svc.CreateCategory(&dto.CreateCategoryReq{Name: "Java", Slug: "java"})
+	svc.CreateCategory(&dto.CreateCategoryReq{Name: "Python", Slug: "py"})
 
 	// 测试查询
 	list, err := svc.GetCategoryList()
@@ -69,12 +70,12 @@ func TestCategoryService_Update(t *testing.T) {
 	svc := NewCategoryService(db)
 
 	// 准备数据
-	svc.CreateCategory("OldName", "old-slug")
+	svc.CreateCategory(&dto.CreateCategoryReq{Name: "OldName", Slug: "old-slug"})
 	var cat model.Category
 	db.First(&cat, "name = ?", "OldName")
 
 	// 测试更新
-	err := svc.UpdateCategory(cat.ID, "NewName", "new-slug")
+	err := svc.UpdateCategory(cat.ID, &dto.UpdateCategoryReq{Name: "NewName", Slug: "new-slug"})
 	assert.NoError(t, err)
 
 	// 验证
@@ -89,7 +90,7 @@ func TestCategoryService_Delete(t *testing.T) {
 	svc := NewCategoryService(db)
 
 	// 1. 准备一个空分类
-	svc.CreateCategory("EmptyCat", "empty")
+	svc.CreateCategory(&dto.CreateCategoryReq{Name: "EmptyCat", Slug: "empty"})
 	var cat model.Category
 	db.First(&cat, "name = ?", "EmptyCat")
 
@@ -102,7 +103,7 @@ func TestCategoryService_Delete(t *testing.T) {
 	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 
 	// 防删逻辑
-	svc.CreateCategory("BusyCat", "busy")
+	svc.CreateCategory(&dto.CreateCategoryReq{Name: "BusyCat", Slug: "busy"})
 	var busyCat model.Category
 	db.First(&busyCat, "name = ?", "BusyCat")
 	db.Create(&model.Post{Title: "Test Post", CategoryID: busyCat.ID})

@@ -2,14 +2,15 @@ package service
 
 import (
 	"errors"
+	"go-blog/dto"
 	"go-blog/model"
 
 	"gorm.io/gorm"
 )
 
 type IConfigService interface {
-	GetSiteConfig() (*model.SiteConfig, error)
-	UpdateSiteConfig(config *model.SiteConfig) error
+	GetSiteConfig() (*dto.ConfigResp, error)
+	UpdateSiteConfig(req *dto.SaveConfigReq) error
 }
 
 type ConfigService struct {
@@ -23,33 +24,58 @@ func NewConfigService(db *gorm.DB) *ConfigService {
 var _ IConfigService = (*ConfigService)(nil)
 
 // GetSiteConfig 获取配置（取第一条）
-func (cs *ConfigService) GetSiteConfig() (*model.SiteConfig, error) {
+func (cs *ConfigService) GetSiteConfig() (*dto.ConfigResp, error) {
 	var config model.SiteConfig
 	err := cs.DB.First(&config).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &model.SiteConfig{}, nil
+			emptyResp := dto.ConfigResp{}
+			return &emptyResp, nil
 		}
 		return nil, err
 	}
 
-	return &config, nil
+	resp := toConfigResp(config)
+	return &resp, nil
 }
 
 // UpdateSiteConfig 更新或创建配置
-func (cs *ConfigService) UpdateSiteConfig(config *model.SiteConfig) error {
+func (cs *ConfigService) UpdateSiteConfig(req *dto.SaveConfigReq) error {
+	modelData := model.SiteConfig{
+		Title:       req.Title,
+		Subtitle:    req.Subtitle,
+		Description: req.Description,
+		Keywords:    req.Keywords,
+		Author:      req.Author,
+		Email:       req.Email,
+		GithubURL:   req.GithubURL,
+	}
+
 	// 检查是否存在
 	var exist model.SiteConfig
 	err := cs.DB.First(&exist).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 不存在则创建
-		return cs.DB.Create(config).Error
+		return cs.DB.Create(&modelData).Error
 	}
 	if err != nil {
 		return err
 	}
 	// 存在则更新，固定 ID 以免产生多条
-	config.ID = exist.ID
-	return cs.DB.Model(&exist).Updates(config).Error
+	modelData.ID = exist.ID
+	return cs.DB.Model(&exist).Updates(&modelData).Error
+}
+
+// 内部函数：model 转化为 DTO
+func toConfigResp(c model.SiteConfig) dto.ConfigResp {
+	return dto.ConfigResp{
+		Title:       c.Title,
+		Subtitle:    c.Subtitle,
+		Description: c.Description,
+		Keywords:    c.Keywords,
+		Author:      c.Author,
+		Email:       c.Email,
+		GithubURL:   c.GithubURL,
+	}
 }

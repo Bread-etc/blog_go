@@ -1,6 +1,7 @@
 package service
 
 import (
+	"go-blog/dto"
 	"go-blog/model"
 	"testing"
 	"time"
@@ -28,7 +29,6 @@ func setupPostTestDB() *gorm.DB {
 	if err != nil {
 		panic("Failed to open sqlite db: " + err.Error())
 	}
-	// 迁移 Post 表
 	db.AutoMigrate(&model.User{}, &model.Category{}, &model.Tag{}, &model.Post{})
 	return db
 }
@@ -144,21 +144,21 @@ func TestPostService_GetList(t *testing.T) {
 	svc.CreatePost(p3, []string{tagID})
 
 	// Case 1: 查全部已发布
-	req := &PostListReq{Page: 1, PageSize: 10}
+	req := &dto.PostListQueryReq{Page: 1, PageSize: 10}
 	list, total, err := svc.GetPostList(req)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(3), total)
 	assert.Len(t, list, 3)
 
 	// Case 2: 筛选标签 (TagID)
-	reqTag := &PostListReq{Page: 1, PageSize: 10, TagID: tagID}
+	reqTag := &dto.PostListQueryReq{Page: 1, PageSize: 10, TagIDs: []string{tagID}}
 	listTag, totalTag, err := svc.GetPostList(reqTag)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(2), totalTag)
 	assert.Len(t, listTag, 2)
 
 	// Case 3: 关键词搜索
-	reqKey := &PostListReq{Page: 1, PageSize: 10, KeyWord: "Docker"}
+	reqKey := &dto.PostListQueryReq{Page: 1, PageSize: 10, Keyword: "Docker"}
 	listKey, totalKey, err := svc.GetPostList(reqKey)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), totalKey)

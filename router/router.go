@@ -23,6 +23,7 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	TagRouter(r, db)
 	LinkRouter(r, db)
 	ConfigRouter(r, db)
+	AggregateRouter(r, db)
 
 	r.GET("/api/health", func(c *gin.Context) {
 		// 检查数据库连接
