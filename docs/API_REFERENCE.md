@@ -45,10 +45,10 @@
 - **GET** `/api/config`: 获取站点配置 (Title, Desc, etc.)
 - **PUT** `/api/config`: 更新站点配置 [Auth]
 
-## 7. 数据看板 (Dashboard)
+## 7. 聚合 (Aggregate)
 
-- **GET** `/api/dashboard/stats`: 获取核心数据面板统计及月增幅 (总文章/分类/标签/友链数与浏览量) [Auth]
-- **GET** `/api/dashboard/top-posts`: 获取按浏览量倒序排行的热门文章列表缩略信息 [Auth]
+- **GET** `/api/aggregate/stats`: 获取核心数据面板统计及月增幅 (总文章/分类/标签/友链数与浏览量) [Auth]
+- **GET** `/api/aggregate/top-posts`: 获取按浏览量倒序排行的热门文章列表缩略信息 [Auth]
 
 ## 8. 系统
 
