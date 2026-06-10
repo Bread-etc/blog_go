@@ -12,7 +12,7 @@ type Error struct {
 	Cause      error  // 底层原始错误
 }
 
-// 创建业务错误
+// 创建业务错误，不保留底层错误原因
 func New(httpStatus int, code string, message string) *Error {
 	return &Error{
 		HTTPStatus: httpStatus,
@@ -61,21 +61,4 @@ func From(err error) (int, string, string) {
 	}
 
 	return http.StatusInternalServerError, CodeInternalError, "internal server error"
-}
-
-func DefaultCode(httpStatus int) string {
-	switch httpStatus {
-	case http.StatusBadRequest:
-		return CodeInvalidParams
-	case http.StatusUnauthorized:
-		return CodeUnauthorized
-	case http.StatusForbidden:
-		return CodeForbidden
-	case http.StatusNotFound:
-		return CodeNotFound
-	case http.StatusConflict:
-		return CodeConflict
-	default:
-		return CodeInternalError
-	}
 }
