@@ -1,6 +1,7 @@
 package service
 
 import (
+	"go-blog/dto"
 	"go-blog/model"
 	"math"
 	"time"
@@ -8,36 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// ===== DTO =====
-
-// StatCard 单项统计卡片
-type StatCard struct {
-	Total     int64   `json:"total"`
-	MonGrowth float64 `json:"mon_growth"`
-}
-
-// DashboardStatsResponse 整体面板统计响应
-type DashboardStatsResponse struct {
-	Posts      StatCard `json:"posts"`
-	Categories StatCard `json:"categories"`
-	Tags       StatCard `json:"tags"`
-	Links      StatCard `json:"links"`
-	TotalViews int64    `json:"total_views"`
-}
-
-// TopPostItem 热门文章
-type TopPostItem struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	Views     uint      `json:"views"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
 // ===== Interface =====
 
 type IAggregateService interface {
-	GetDashboardStats() (*DashboardStatsResponse, error)
-	GetTopPosts(limit int) ([]TopPostItem, error)
+	GetDashboardStats() (*dto.DashboardStatsResp, error)
+	GetTopPosts(limit int) ([]dto.TopPostItemResp, error)
 }
 
 type AggregateService struct {
@@ -51,10 +27,10 @@ func NewAggregateService(db *gorm.DB) *AggregateService {
 var _ IAggregateService = (*AggregateService)(nil)
 
 // GetDashboardStats 获取面板聚合统计数据
-func (as *AggregateService) GetDashboardStats() (*DashboardStatsResponse, error) {
+func (as *AggregateService) GetDashboardStats() (*dto.DashboardStatsResp, error) {
 	now := time.Now()
 
-	resp := &DashboardStatsResponse{
+	resp := &dto.DashboardStatsResp{
 		Posts:      as.calcStatCard(&model.Post{}, now),
 		Categories: as.calcStatCard(&model.Category{}, now),
 		Tags:       as.calcStatCard(&model.Tag{}, now),
@@ -72,19 +48,19 @@ func (as *AggregateService) GetDashboardStats() (*DashboardStatsResponse, error)
 }
 
 // GetTopPosts 获取热门文章（按阅读量降序）
-func (as *AggregateService) GetTopPosts(limit int) ([]TopPostItem, error) {
+func (as *AggregateService) GetTopPosts(limit int) ([]dto.TopPostItemResp, error) {
 	var posts []model.Post
 	if err := as.DB.Select("id, title, views, created_at").Order("views DESC").Limit(limit).Find(&posts).Error; err != nil {
 		return nil, err
 	}
 
-	items := make([]TopPostItem, 0, len(posts))
+	items := make([]dto.TopPostItemResp, 0, len(posts))
 	for _, p := range posts {
 		var views uint
 		if p.Views != nil {
 			views = *p.Views
 		}
-		items = append(items, TopPostItem{
+		items = append(items, dto.TopPostItemResp{
 			ID:        p.ID,
 			Title:     p.Title,
 			Views:     views,
@@ -96,7 +72,7 @@ func (as *AggregateService) GetTopPosts(limit int) ([]TopPostItem, error) {
 }
 
 // calcStatCard 内部复制，计算某个模型的总量 + 月环比
-func (as *AggregateService) calcStatCard(m interface{}, now time.Time) StatCard {
+func (as *AggregateService) calcStatCard(m interface{}, now time.Time) dto.StatCardResp {
 	var total, thisMonthCount, lastMonthCount int64
 
 	startOfThisMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
@@ -115,8 +91,8 @@ func (as *AggregateService) calcStatCard(m interface{}, now time.Time) StatCard 
 		growth = 100.0
 	}
 
-	return StatCard{
+	return dto.StatCardResp{
 		Total:     total,
-		MonGrowth: math.Round(growth*100) / 100,
+		MoMGrowth: math.Round(growth*100) / 100,
 	}
 }

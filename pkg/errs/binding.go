@@ -50,6 +50,8 @@ func fromValidationError(fe validator.FieldError) *Error {
 	tag := fe.Tag()
 
 	switch {
+	case strings.Contains(namespace, "TopPostsQueryReq"):
+		return fromAggregateValidationError(field, tag)
 	case strings.Contains(namespace, "Category"):
 		return fromCategoryValidationError(field, tag)
 	case strings.Contains(namespace, "Tag"):
@@ -65,6 +67,17 @@ func fromValidationError(fe validator.FieldError) *Error {
 	default:
 		return New(http.StatusBadRequest, CodeInvalidParams, "invalid request parameters")
 	}
+}
+
+func fromAggregateValidationError(field string, tag string) *Error {
+	switch field {
+	case "Limit":
+		if tag == "min" || tag == "max" {
+			return New(http.StatusBadRequest, CodeAggregateTopPostsLimitInvalid, "aggregate top posts limit is invalid")
+		}
+	}
+
+	return New(http.StatusBadRequest, CodeInvalidParams, "invalid aggregate parameters")
 }
 
 func fromCategoryValidationError(field string, tag string) *Error {
@@ -85,7 +98,7 @@ func fromCategoryValidationError(field string, tag string) *Error {
 		}
 	}
 
-	return New(http.StatusBadRequest, CodeInvalidParams, "invalid category parameter")
+	return New(http.StatusBadRequest, CodeInvalidParams, "invalid category parameters")
 }
 
 func fromTagValidationError(field string, tag string) *Error {

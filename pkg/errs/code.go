@@ -11,6 +11,9 @@ const (
 	CodeConflict      = "CONFLICT"       // 409
 	CodeInternalError = "INTERNAL_ERROR" // 500
 
+	// Aggregate 模块
+	CodeAggregateTopPostsLimitInvalid = "AGGREGATE_TOP_POSTS_LIMIT_INVALID"
+
 	// User 模块
 	CodeInvalidCredentials     = "INVALID_CREDENTIALS"
 	CodeInvalidPasswordEncrypt = "INVALID_PASSWORD_ENCRYPTION"

@@ -83,16 +83,16 @@ func TestAggregateService_GetDashboardStats(t *testing.T) {
 
 	// 文章：总共 3 篇，本月 2，上月同期 1，环比 = (2-1)/1*100 = 100%
 	assert.Equal(t, int64(3), stats.Posts.Total)
-	assert.Equal(t, 100.0, stats.Posts.MonGrowth)
+	assert.Equal(t, 100.0, stats.Posts.MoMGrowth)
 	// 分类：总共 3 个，本月 2，上月同期 1，环比 = 100%
 	assert.Equal(t, int64(3), stats.Categories.Total)
-	assert.Equal(t, 100.0, stats.Categories.MonGrowth)
+	assert.Equal(t, 100.0, stats.Categories.MoMGrowth)
 	// 标签：总共 2 个，本月 1，上月同期 1，环比 = (1-1)/1*100 = 0%
 	assert.Equal(t, int64(2), stats.Tags.Total)
-	assert.Equal(t, 0.0, stats.Tags.MonGrowth)
+	assert.Equal(t, 0.0, stats.Tags.MoMGrowth)
 	// 友链：总共 1 个，本月 1，上月 0，环比 = 100 (上月0特殊处理)
 	assert.Equal(t, int64(1), stats.Links.Total)
-	assert.Equal(t, 100.0, stats.Links.MonGrowth)
+	assert.Equal(t, 100.0, stats.Links.MoMGrowth)
 	// 全站总阅读量 = 100 + 50 + 200 = 350
 	assert.Equal(t, int64(350), stats.TotalViews)
 }
@@ -105,7 +105,7 @@ func TestAggregateService_GetDashboardStats_Empty(t *testing.T) {
 	stats, err := svc.GetDashboardStats()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(0), stats.Posts.Total)
-	assert.Equal(t, 0.0, stats.Posts.MonGrowth)
+	assert.Equal(t, 0.0, stats.Posts.MoMGrowth)
 	assert.Equal(t, int64(0), stats.TotalViews)
 }
 
