@@ -134,6 +134,9 @@ func fromPostValidationError(field string, tag string) *Error {
 			return New(http.StatusBadRequest, CodePostSummaryTooLong, "post summary is too long")
 		}
 	case "Cover":
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodePostCoverTooLong, "post cover is too long")
+		}
 		if tag == "url" {
 			return New(http.StatusBadRequest, CodePostCoverURLInvalid, "post cover url is invalid")
 		}
@@ -145,6 +148,10 @@ func fromPostValidationError(field string, tag string) *Error {
 		if tag == "required" || tag == "min" {
 			return New(http.StatusBadRequest, CodePostTagIDsRequired, "post tag ids are required")
 		}
+	case "IsPublished":
+		if tag == "required" {
+			return New(http.StatusBadRequest, CodePostIsPublishedRequired, "post publish status is required")
+		}
 	case "Page":
 		if tag == "min" {
 			return New(http.StatusBadRequest, CodePostPageInvalid, "post page is invalid")
@@ -152,6 +159,10 @@ func fromPostValidationError(field string, tag string) *Error {
 	case "PageSize":
 		if tag == "min" || tag == "max" {
 			return New(http.StatusBadRequest, CodePostPageSizeInvalid, "post page size is invalid")
+		}
+	case "Keyword":
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodePostKeywordTooLong, "post keyword is too long")
 		}
 	}
 
@@ -177,6 +188,14 @@ func fromLinkValidationError(field string, tag string) *Error {
 		if tag == "max" {
 			return New(http.StatusBadRequest, CodeLinkURLTooLong, "link url is too long")
 		}
+	case "Description":
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeLinkDescriptionTooLong, "link description is too long")
+		}
+	case "Sort":
+		if tag == "min" {
+			return New(http.StatusBadRequest, CodeLinkSortInvalid, "link sort is invalid")
+		}
 	}
 
 	return New(http.StatusBadRequest, CodeInvalidParams, "invalid link parameters")
@@ -188,13 +207,38 @@ func fromConfigValidationError(field string, tag string) *Error {
 		if tag == "required" {
 			return New(http.StatusBadRequest, CodeConfigTitleRequired, "config title is required")
 		}
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeConfigTitleTooLong, "config title is too long")
+		}
+	case "Subtitle":
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeConfigSubtitleTooLong, "config subtitle is too long")
+		}
+	case "Description":
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeConfigDescriptionTooLong, "config description is too long")
+		}
+	case "Keywords":
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeConfigKeywordsTooLong, "config keywords are too long")
+		}
+	case "Author":
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeConfigAuthorTooLong, "config author is too long")
+		}
 	case "Email":
 		if tag == "email" {
 			return New(http.StatusBadRequest, CodeConfigEmailInvalid, "config email is invalid")
 		}
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeConfigEmailTooLong, "config email is too long")
+		}
 	case "GithubURL":
 		if tag == "url" {
 			return New(http.StatusBadRequest, CodeConfigGithubURLInvalid, "config github url is invalid")
+		}
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeConfigGithubURLTooLong, "config github url is too long")
 		}
 	}
 
@@ -206,6 +250,9 @@ func fromUserValidationError(field string, tag string) *Error {
 	case "Username":
 		if tag == "required" {
 			return New(http.StatusBadRequest, CodeUsernameRequired, "username is required")
+		}
+		if tag == "max" {
+			return New(http.StatusBadRequest, CodeUsernameTooLong, "username is too long")
 		}
 	case "Password":
 		if tag == "required" {
