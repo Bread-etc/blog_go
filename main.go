@@ -28,6 +28,10 @@ func main() {
 	if err != nil {
 		logger.Log.Fatalf("❌ Failed to connect the database: %v", err)
 	}
+	// 显式创建多对多关联表
+	if err := db.SetupJoinTable(&model.Post{}, "Tags", &model.PostTag{}); err != nil {
+		logger.Log.Fatalf("❌ Failed to setup post_tags join table: %v", err)
+	}
 
 	// 自动迁移模型
 	err = db.AutoMigrate(
@@ -35,6 +39,7 @@ func main() {
 		&model.Category{},
 		&model.Tag{},
 		&model.Post{},
+		&model.PostTag{},
 		&model.SiteConfig{},
 		&model.Link{},
 	)
