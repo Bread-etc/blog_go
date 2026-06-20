@@ -22,8 +22,9 @@ var rsaPrivateKey *rsa.PrivateKey
 var rsaPublicKey *rsa.PublicKey
 
 type Claims struct {
-	UserID   string `json:"user_id"`
+	UserID   string `json:"userId"`
 	Username string `json:"username"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -60,7 +61,7 @@ func Init(c *Config) error {
 }
 
 // GenerateToken 生成 Token
-func GenerateToken(userID, username string) (string, error) {
+func GenerateToken(userID, username, role string) (string, error) {
 	if cfg == nil {
 		return "", errors.New("jwt not initialized")
 	}
@@ -70,10 +71,11 @@ func GenerateToken(userID, username string) (string, error) {
 	claims := Claims{
 		UserID:   userID,
 		Username: username,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(exp)), // 24小时过期
-			Issuer:    "blog_go",                               // 签发者
+			ExpiresAt: jwt.NewNumericDate(now.Add(exp)), // 24小时过期
+			Issuer:    "blog_go",                        // 签发者
 		},
 	}
 
