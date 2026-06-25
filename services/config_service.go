@@ -4,6 +4,8 @@ import (
 	"errors"
 	"go-blog/dto"
 	"go-blog/model"
+	"go-blog/pkg/errs"
+	"net/http"
 
 	"gorm.io/gorm"
 )
@@ -23,48 +25,58 @@ func NewConfigService(db *gorm.DB) *ConfigService {
 
 var _ IConfigService = (*ConfigService)(nil)
 
-// GetSiteConfig 获取配置（取第一条）
+// GetSiteConfig 获取站点配置；未配置时返回空配置，不视为错误
 func (cs *ConfigService) GetSiteConfig() (*dto.ConfigResp, error) {
 	var config model.SiteConfig
-	err := cs.DB.First(&config).Error
 
-	if err != nil {
+	if err := cs.DB.Order("created_at ASC").First(&config).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			emptyResp := dto.ConfigResp{}
-			return &emptyResp, nil
+			return &dto.ConfigResp{}, nil
 		}
-		return nil, err
+		return nil, errs.Wrap(http.StatusInternalServerError, errs.CodeDatabaseUnavailable, "failed to get site config", err)
 	}
 
 	resp := toConfigResp(config)
+
 	return &resp, nil
 }
 
-// UpdateSiteConfig 更新或创建配置
+// UpdateSiteConfig 更新或创建站点配置，该模块按单记录配置处理
 func (cs *ConfigService) UpdateSiteConfig(req *dto.SaveConfigReq) error {
-	modelData := model.SiteConfig{
-		Title:       req.Title,
-		Subtitle:    req.Subtitle,
-		Description: req.Description,
-		Keywords:    req.Keywords,
-		Author:      req.Author,
-		Email:       req.Email,
-		GithubURL:   req.GithubURL,
+	var config model.SiteConfig
+
+	if err := cs.DB.Order("created_at ASC").First(&config).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			config = model.SiteConfig{}
+			assignSiteConfig(&config, req)
+
+			if err := cs.DB.Create(&config).Error; err != nil {
+				return errs.Wrap(http.StatusInternalServerError, errs.CodeDatabaseUnavailable, "failed to create site config", err)
+			}
+
+			return nil
+		}
+
+		return errs.Wrap(http.StatusInternalServerError, errs.CodeDatabaseUnavailable, "failed to get site config", err)
 	}
 
-	// 检查是否存在
-	var exist model.SiteConfig
-	err := cs.DB.First(&exist).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		// 不存在则创建
-		return cs.DB.Create(&modelData).Error
+	assignSiteConfig(&config, req)
+
+	if err := cs.DB.Save(&config).Error; err != nil {
+		return errs.Wrap(http.StatusInternalServerError, errs.CodeDatabaseUnavailable, "failed to update site config", err)
 	}
-	if err != nil {
-		return err
-	}
-	// 存在则更新，固定 ID 以免产生多条
-	modelData.ID = exist.ID
-	return cs.DB.Model(&exist).Updates(&modelData).Error
+
+	return nil
+}
+
+func assignSiteConfig(config *model.SiteConfig, req *dto.SaveConfigReq) {
+	config.Title = req.Title
+	config.Subtitle = req.Subtitle
+	config.Description = req.Description
+	config.Keywords = req.Keywords
+	config.Author = req.Author
+	config.Email = req.Email
+	config.GithubURL = req.GithubURL
 }
 
 // 内部函数：model 转化为 DTO

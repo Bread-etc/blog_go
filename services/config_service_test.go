@@ -1,79 +1,202 @@
 package service
 
 import (
+	"errors"
+	"net/http"
+	"testing"
+	"time"
+
 	"go-blog/dto"
 	"go-blog/model"
-	"testing"
+	"go-blog/pkg/errs"
 
 	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 // 初始化内存数据库
-func setupConfigTestDB() *gorm.DB {
+func setupConfigTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
-	if err != nil {
-		panic("Failed to open sqlite db: " + err.Error())
-	}
-	// 迁移 SiteConfig 表
-	db.AutoMigrate(&model.SiteConfig{})
+	require.NoError(t, err)
+	require.NoError(t, db.AutoMigrate(&model.SiteConfig{}))
+
 	return db
 }
 
-func TestConfigService_Get(t *testing.T) {
-	db := setupConfigTestDB()
-	svc := NewConfigService(db)
+func assertConfigAppError(t *testing.T, err error, httpStatus int, code string) {
+	t.Helper()
 
-	// Case 1: 还没配置时，应该返回空对象或默认值，不报错
-	_, err := svc.GetSiteConfig()
-	assert.NoError(t, err)
-
-	// Case 2: 预置数据后查
-	db.Create(&model.SiteConfig{Title: "My Blog"})
-	cfg2, err := svc.GetSiteConfig()
-	assert.NoError(t, err)
-	assert.Equal(t, "My Blog", cfg2.Title)
+	var appErr *errs.Error
+	require.True(t, errors.As(err, &appErr), "expected *errs.Error, got %T", err)
+	assert.Equal(t, httpStatus, appErr.HTTPStatus)
+	assert.Equal(t, code, appErr.Code)
 }
 
-func TestConfigService_Update(t *testing.T) {
-	db := setupConfigTestDB()
+func fullConfigReq() *dto.SaveConfigReq {
+	return &dto.SaveConfigReq{
+		Title:       "My Blog",
+		Subtitle:    "A personal blog",
+		Description: "Blog description",
+		Keywords:    "go,gin,gorm",
+		Author:      "Admin",
+		Email:       "admin@example.com",
+		GithubURL:   "https://github.com/example",
+	}
+}
+
+func TestConfigService_GetSiteConfig_Empty(t *testing.T) {
+	db := setupConfigTestDB(t)
 	svc := NewConfigService(db)
 
-	// Case 1: 首次更新 (相当于创建)
-	newCfg := &dto.SaveConfigReq{
-		Title:       "First Title",
-		Description: "Hello",
-	}
-	err := svc.UpdateSiteConfig(newCfg)
-	assert.NoError(t, err)
+	config, err := svc.GetSiteConfig()
+	require.NoError(t, err)
+	require.NotNil(t, config)
 
-	// 验证数据库记录
+	assert.Equal(t, "", config.Title)
+	assert.Equal(t, "", config.Subtitle)
+	assert.Equal(t, "", config.Description)
+	assert.Equal(t, "", config.Keywords)
+	assert.Equal(t, "", config.Author)
+	assert.Equal(t, "", config.Email)
+	assert.Equal(t, "", config.GithubURL)
+}
+
+func TestConfigService_GetSiteConfig(t *testing.T) {
+	db := setupConfigTestDB(t)
+	svc := NewConfigService(db)
+
+	older := model.SiteConfig{
+		Title:     "Older Blog",
+		CreatedAt: time.Now().Add(-2 * time.Hour),
+	}
+	newer := model.SiteConfig{
+		Title:     "Newer Blog",
+		CreatedAt: time.Now().Add(-1 * time.Hour),
+	}
+	require.NoError(t, db.Create(&newer).Error)
+	require.NoError(t, db.Create(&older).Error)
+
+	config, err := svc.GetSiteConfig()
+	require.NoError(t, err)
+	require.NotNil(t, config)
+
+	assert.Equal(t, "Older Blog", config.Title)
+}
+
+func TestConfigService_GetSiteConfig_DatabaseError(t *testing.T) {
+	db := setupConfigTestDB(t)
+	svc := NewConfigService(db)
+
+	sqlDB, err := db.DB()
+	require.NoError(t, err)
+	require.NoError(t, sqlDB.Close())
+
+	config, err := svc.GetSiteConfig()
+	require.Error(t, err)
+	assert.Nil(t, config)
+	assertConfigAppError(t, err, http.StatusInternalServerError, errs.CodeDatabaseUnavailable)
+}
+
+func TestConfigService_UpdateSiteConfig_Create(t *testing.T) {
+	db := setupConfigTestDB(t)
+	svc := NewConfigService(db)
+
+	req := fullConfigReq()
+	require.NoError(t, svc.UpdateSiteConfig(req))
+
 	var count int64
-	db.Model(&model.SiteConfig{}).Count(&count)
+	require.NoError(t, db.Model(&model.SiteConfig{}).Count(&count).Error)
 	assert.Equal(t, int64(1), count)
 
-	// 验证内容
-	saved, _ := svc.GetSiteConfig()
-	assert.Equal(t, "First Title", saved.Title)
+	config, err := svc.GetSiteConfig()
+	require.NoError(t, err)
+	require.NotNil(t, config)
 
-	// Case 2: 二次更新 (修改)
-	updateCfg := &dto.SaveConfigReq{
-		Title:       "Updated Title",
-		Description: "World",
+	assert.Equal(t, req.Title, config.Title)
+	assert.Equal(t, req.Subtitle, config.Subtitle)
+	assert.Equal(t, req.Description, config.Description)
+	assert.Equal(t, req.Keywords, config.Keywords)
+	assert.Equal(t, req.Author, config.Author)
+	assert.Equal(t, req.Email, config.Email)
+	assert.Equal(t, req.GithubURL, config.GithubURL)
+}
+
+func TestConfigService_UpdateSiteConfig_Update(t *testing.T) {
+	db := setupConfigTestDB(t)
+	svc := NewConfigService(db)
+
+	require.NoError(t, svc.UpdateSiteConfig(fullConfigReq()))
+
+	updateReq := &dto.SaveConfigReq{
+		Title: "Updated Blog",
 	}
-	err = svc.UpdateSiteConfig(updateCfg)
-	assert.NoError(t, err)
+	require.NoError(t, svc.UpdateSiteConfig(updateReq))
 
-	// 验证；库里应该依然只有 1 条记录 (不能增加)
-	db.Model(&model.SiteConfig{}).Count(&count)
+	var count int64
+	require.NoError(t, db.Model(&model.SiteConfig{}).Count(&count).Error)
 	assert.Equal(t, int64(1), count)
 
-	// 验证：内容已变化
-	saved2, _ := svc.GetSiteConfig()
-	assert.Equal(t, "Updated Title", saved2.Title)
-	assert.Equal(t, "World", saved2.Description)
+	config, err := svc.GetSiteConfig()
+	require.NoError(t, err)
+	require.NotNil(t, config)
+
+	assert.Equal(t, "Updated Blog", config.Title)
+	assert.Equal(t, "", config.Subtitle)
+	assert.Equal(t, "", config.Description)
+	assert.Equal(t, "", config.Keywords)
+	assert.Equal(t, "", config.Author)
+	assert.Equal(t, "", config.Email)
+	assert.Equal(t, "", config.GithubURL)
+}
+
+func TestConfigService_UpdateSiteConfig_UpdatesFirstRecordOnly(t *testing.T) {
+	db := setupConfigTestDB(t)
+	svc := NewConfigService(db)
+
+	older := model.SiteConfig{
+		Title:     "Older Blog",
+		CreatedAt: time.Now().Add(-2 * time.Hour),
+	}
+	newer := model.SiteConfig{
+		Title:     "Newer Blog",
+		CreatedAt: time.Now().Add(-1 * time.Hour),
+	}
+	require.NoError(t, db.Create(&newer).Error)
+	require.NoError(t, db.Create(&older).Error)
+
+	require.NoError(t, svc.UpdateSiteConfig(&dto.SaveConfigReq{
+		Title: "Updated First",
+	}))
+
+	var oldAfterUpdate model.SiteConfig
+	require.NoError(t, db.First(&oldAfterUpdate, "id = ?", older.ID).Error)
+	assert.Equal(t, "Updated First", oldAfterUpdate.Title)
+
+	var newAfterUpdate model.SiteConfig
+	require.NoError(t, db.First(&newAfterUpdate, "id = ?", newer.ID).Error)
+	assert.Equal(t, "Newer Blog", newAfterUpdate.Title)
+
+	var count int64
+	require.NoError(t, db.Model(&model.SiteConfig{}).Count(&count).Error)
+	assert.Equal(t, int64(2), count)
+}
+
+func TestConfigService_UpdateSiteConfig_DatabaseError(t *testing.T) {
+	db := setupConfigTestDB(t)
+	svc := NewConfigService(db)
+
+	sqlDB, err := db.DB()
+	require.NoError(t, err)
+	require.NoError(t, sqlDB.Close())
+
+	err = svc.UpdateSiteConfig(fullConfigReq())
+	require.Error(t, err)
+	assertConfigAppError(t, err, http.StatusInternalServerError, errs.CodeDatabaseUnavailable)
 }
