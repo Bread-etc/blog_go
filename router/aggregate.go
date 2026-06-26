@@ -9,11 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func AggregateRouter(r *gin.Engine, db *gorm.DB) {
+func DashboardRouter(r *gin.Engine, db *gorm.DB) {
 	aggregateService := service.NewAggregateService(db)
 	aggregateController := controller.NewAggregateController(aggregateService)
 
-	dashboardGroup := r.Group("/api/aggregate")
+	dashboardGroup := r.Group("/api/dashboard")
 	dashboardGroup.Use(middleware.JWTAuth())
 	{
 		dashboardGroup.GET("/stats", aggregateController.GetDashboardStats)

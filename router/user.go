@@ -9,22 +9,22 @@ import (
 	"gorm.io/gorm"
 )
 
-func UserRoutes(r *gin.Engine, db *gorm.DB) {
+func AuthRouter(r *gin.Engine, db *gorm.DB) {
 	userService := service.NewUserService(db)
 	userController := controller.NewUserController(userService)
 
-	userGroup := r.Group("/api/user")
+	authGroup := r.Group("/api/auth")
 	{
 		// 公开接口
-		userGroup.POST("/login", userController.Login)
-		userGroup.GET("/public-key", userController.GetPublicKey)
+		authGroup.POST("/login", userController.Login)
+		authGroup.GET("/public-key", userController.GetPublicKey)
 
 		// 需要认证的接口组
-		authGroup := userGroup.Group("")
-		authGroup.Use(middleware.JWTAuth())
+		protectedGroup := authGroup.Group("")
+		protectedGroup.Use(middleware.JWTAuth())
 		{
-			authGroup.GET("/profile", userController.GetProfile)
-			authGroup.POST("/change-password", userController.ChangePassword)
+			protectedGroup.GET("/profile", userController.GetProfile)
+			protectedGroup.POST("/change-password", userController.ChangePassword)
 		}
 	}
 }
