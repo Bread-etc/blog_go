@@ -2,10 +2,9 @@ package controller
 
 import (
 	"go-blog/dto"
-	"go-blog/pkg/logger"
+	"go-blog/pkg/errs"
 	"go-blog/pkg/response"
 	service "go-blog/services"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,30 +17,27 @@ func NewConfigController(configService service.IConfigService) *ConfigController
 	return &ConfigController{ConfigService: configService}
 }
 
-// GetConfig
+// GetConfig 获取站点配置
 func (cc *ConfigController) GetConfig(c *gin.Context) {
 	config, err := cc.ConfigService.GetSiteConfig()
 	if err != nil {
-		logger.Log.Errorf("GetConfig service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.ErrorFrom(c, err)
 		return
 	}
 
 	response.Success(c, config)
 }
 
-// UpdateConfig
+// UpdateConfig 更新站点配置
 func (cc *ConfigController) UpdateConfig(c *gin.Context) {
 	var req dto.SaveConfigReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("UpdateConfig bind failed: %v", err)
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, errs.FromBinding(err))
 		return
 	}
 
 	if err := cc.ConfigService.UpdateSiteConfig(&req); err != nil {
-		logger.Log.Errorf("UpdateConfig service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.ErrorFrom(c, err)
 		return
 	}
 

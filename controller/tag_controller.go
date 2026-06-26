@@ -1,12 +1,10 @@
 package controller
 
 import (
-	"fmt"
 	"go-blog/dto"
-	"go-blog/pkg/logger"
+	"go-blog/pkg/errs"
 	"go-blog/pkg/response"
 	service "go-blog/services"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,8 +21,7 @@ func NewTagController(tagService service.ITagService) *TagController {
 func (tc *TagController) GetTagList(c *gin.Context) {
 	list, err := tc.TagService.GetTagList()
 	if err != nil {
-		logger.Log.Errorf("GetTagList service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.ErrorFrom(c, err)
 		return
 	}
 
@@ -35,15 +32,13 @@ func (tc *TagController) GetTagList(c *gin.Context) {
 func (tc *TagController) CreateTag(c *gin.Context) {
 	var req dto.CreateTagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("CreateTag bind failed: %v", err)
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, errs.FromBinding(err))
 		return
 	}
 
 	tag, err := tc.TagService.CreateTag(&req)
 	if err != nil {
-		logger.Log.Errorf("CreateTag service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.ErrorFrom(c, err)
 		return
 	}
 
@@ -53,16 +48,15 @@ func (tc *TagController) CreateTag(c *gin.Context) {
 // UpdateTag 更新标签
 func (tc *TagController) UpdateTag(c *gin.Context) {
 	id := c.Param("id")
+
 	var req dto.UpdateTagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("UpdateTag bind failed: %v", err)
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, errs.FromBinding(err))
 		return
 	}
 
 	if err := tc.TagService.UpdateTag(id, &req); err != nil {
-		logger.Log.Errorf("UpdateTag service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update tag: %v", err))
+		response.ErrorFrom(c, err)
 		return
 	}
 
@@ -72,9 +66,9 @@ func (tc *TagController) UpdateTag(c *gin.Context) {
 // DeleteTag 删除标签
 func (tc *TagController) DeleteTag(c *gin.Context) {
 	id := c.Param("id")
+
 	if err := tc.TagService.DeleteTag(id); err != nil {
-		logger.Log.Errorf("DeleteTag service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete tag: %v", err))
+		response.ErrorFrom(c, err)
 		return
 	}
 

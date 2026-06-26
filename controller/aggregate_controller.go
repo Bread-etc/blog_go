@@ -1,11 +1,10 @@
 package controller
 
 import (
-	"go-blog/pkg/logger"
+	"go-blog/dto"
+	"go-blog/pkg/errs"
 	"go-blog/pkg/response"
 	service "go-blog/services"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,8 +21,7 @@ func NewAggregateController(aggregateService service.IAggregateService) *Aggrega
 func (ac *AggregateController) GetDashboardStats(c *gin.Context) {
 	stats, err := ac.AggregateService.GetDashboardStats()
 	if err != nil {
-		logger.Log.Errorf("GetDashboardStats service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.ErrorFrom(c, err)
 		return
 	}
 
@@ -32,16 +30,18 @@ func (ac *AggregateController) GetDashboardStats(c *gin.Context) {
 
 // GetTopPosts 获取热门文章
 func (ac *AggregateController) GetTopPosts(c *gin.Context) {
-	limitStr := c.DefaultQuery("limit", "5")
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit <= 0 || limit >= 20 {
-		limit = 5
+	req := dto.TopPostsQueryReq{
+		Limit: 5,
 	}
 
-	posts, err := ac.AggregateService.GetTopPosts(limit)
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.Error(c, errs.FromBinding(err))
+		return
+	}
+
+	posts, err := ac.AggregateService.GetTopPosts(req.Limit)
 	if err != nil {
-		logger.Log.Errorf("GetTopPosts service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.ErrorFrom(c, err)
 		return
 	}
 

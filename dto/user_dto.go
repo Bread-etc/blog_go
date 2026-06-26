@@ -19,6 +19,10 @@ type LoginResp struct {
 	User  UserBrief `json:"user"`
 }
 
+type PublicKeyResp struct {
+	PublicKey string `json:"publicKey"`
+}
+
 type UserBrief struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
