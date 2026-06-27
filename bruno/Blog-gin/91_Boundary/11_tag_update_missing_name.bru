@@ -1,0 +1,31 @@
+meta {
+  name: 11 Tag Update Missing Name
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{baseUrl}}/api/tags/{{boundaryTagId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "slug": "boundary-tag-updated-{{runId}}"
+  }
+}
+
+tests {
+  test("tag PUT requires name", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("TAG_NAME_REQUIRED");
+    expect(res.body.data).to.equal(null);
+  });
+}

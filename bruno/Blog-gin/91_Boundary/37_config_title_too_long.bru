@@ -1,0 +1,37 @@
+meta {
+  name: 37 Config Title Too Long
+  type: http
+  seq: 37
+}
+
+put {
+  url: {{baseUrl}}/api/config
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "subtitle": "Boundary subtitle",
+    "description": "Boundary description",
+    "keywords": "boundary",
+    "author": "Boundary",
+    "email": "admin@example.com",
+    "githubUrl": "https://github.com/example"
+  }
+}
+
+tests {
+  test("config title length is validated", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("CONFIG_TITLE_TOO_LONG");
+    expect(res.body.data).to.equal(null);
+  });
+}

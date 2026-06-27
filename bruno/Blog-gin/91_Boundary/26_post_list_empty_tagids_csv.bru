@@ -1,0 +1,20 @@
+meta {
+  name: 26 Post List Empty TagIds CSV
+  type: http
+  seq: 26
+}
+
+get {
+  url: {{baseUrl}}/api/posts?page=1&pageSize=10&tagIds={{boundaryTagId}},
+  body: none
+  auth: none
+}
+
+tests {
+  test("post list rejects empty tag id after csv split", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("POST_TAG_IDS_INVALID");
+    expect(res.body.data).to.equal(null);
+  });
+}

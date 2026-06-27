@@ -1,0 +1,31 @@
+meta {
+  name: 06 Category Update Missing Slug
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/categories/{{boundaryCategoryId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Boundary Category Updated {{runId}}"
+  }
+}
+
+tests {
+  test("category PUT requires slug", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("CATEGORY_SLUG_REQUIRED");
+    expect(res.body.data).to.equal(null);
+  });
+}

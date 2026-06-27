@@ -1,0 +1,32 @@
+meta {
+  name: 03 Create Tag Missing Slug
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/tags
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Missing Slug {{runId}}"
+  }
+}
+
+tests {
+  test("missing tag slug returns business error", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("TAG_SLUG_REQUIRED");
+    expect(res.body.data).to.equal(null);
+  });
+}
+

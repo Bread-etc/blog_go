@@ -1,0 +1,32 @@
+meta {
+  name: 08 Tag Duplicate Name
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/tags
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Boundary Tag {{runId}}",
+    "slug": "boundary-tag-dup-name-{{runId}}"
+  }
+}
+
+tests {
+  test("duplicate tag name returns conflict", function () {
+    expect(res.status).to.equal(409);
+    expect(res.body.code).to.equal(409);
+    expect(res.body.errorCode).to.equal("TAG_NAME_EXISTS");
+    expect(res.body.data).to.equal(null);
+  });
+}

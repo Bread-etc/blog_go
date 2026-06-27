@@ -1,0 +1,21 @@
+meta {
+  name: 01 Profile Without Token
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/auth/profile
+  body: none
+  auth: none
+}
+
+tests {
+  test("profile without token is unauthorized", function () {
+    expect(res.status).to.equal(401);
+    expect(res.body.code).to.equal(401);
+    expect(res.body.errorCode).to.equal("UNAUTHORIZED");
+    expect(res.body.data).to.equal(null);
+  });
+}
+

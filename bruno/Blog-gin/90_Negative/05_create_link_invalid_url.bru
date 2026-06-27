@@ -1,0 +1,35 @@
+meta {
+  name: 05 Create Link Invalid URL
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/links
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Invalid Link {{runId}}",
+    "url": "not-url",
+    "description": "",
+    "sort": 0
+  }
+}
+
+tests {
+  test("invalid link url returns business error", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("LINK_URL_INVALID");
+    expect(res.body.data).to.equal(null);
+  });
+}
+

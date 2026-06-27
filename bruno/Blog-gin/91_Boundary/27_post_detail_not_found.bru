@@ -1,0 +1,20 @@
+meta {
+  name: 27 Post Detail Not Found
+  type: http
+  seq: 27
+}
+
+get {
+  url: {{baseUrl}}/api/posts/not-found-post-{{runId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("post detail not found returns 404", function () {
+    expect(res.status).to.equal(404);
+    expect(res.body.code).to.equal(404);
+    expect(res.body.errorCode).to.equal("POST_NOT_FOUND");
+    expect(res.body.data).to.equal(null);
+  });
+}

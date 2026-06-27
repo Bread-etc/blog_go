@@ -1,0 +1,46 @@
+meta {
+  name: 21 Create Boundary Post
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/api/posts
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Boundary Post {{runId}}",
+    "content": "Boundary post content.",
+    "summary": "",
+    "slug": "boundary-post-{{runId}}",
+    "cover": "",
+    "categoryId": "{{boundaryCategoryId}}",
+    "tagIds": ["{{boundaryTagId}}"],
+    "isPublished": false
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body && res.body.data) {
+    bru.setVar("boundaryPostId", res.body.data.id);
+    bru.setVar("boundaryPostSlug", res.body.data.slug);
+  }
+}
+
+tests {
+  test("valid unpublished boundary post can be created", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.code).to.equal(200);
+    expect(res.body.errorCode).to.equal("");
+    expect(res.body.data.isPublished).to.equal(false);
+    expect(bru.getVar("boundaryPostId")).to.be.a("string").and.not.empty;
+  });
+}

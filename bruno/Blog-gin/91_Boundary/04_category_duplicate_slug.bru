@@ -1,0 +1,32 @@
+meta {
+  name: 04 Category Duplicate Slug
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/categories
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Boundary Category Slug Duplicate {{runId}}",
+    "slug": "boundary-category-{{runId}}"
+  }
+}
+
+tests {
+  test("duplicate category slug returns conflict", function () {
+    expect(res.status).to.equal(409);
+    expect(res.body.code).to.equal(409);
+    expect(res.body.errorCode).to.equal("CATEGORY_SLUG_EXISTS");
+    expect(res.body.data).to.equal(null);
+  });
+}

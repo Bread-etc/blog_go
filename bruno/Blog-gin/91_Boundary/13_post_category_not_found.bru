@@ -1,0 +1,38 @@
+meta {
+  name: 13 Post Category Not Found
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/posts
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Boundary Missing Category {{runId}}",
+    "content": "content",
+    "summary": "",
+    "slug": "boundary-missing-category-{{runId}}",
+    "cover": "",
+    "categoryId": "not-found-category-{{runId}}",
+    "tagIds": ["{{boundaryTagId}}"],
+    "isPublished": true
+  }
+}
+
+tests {
+  test("post rejects missing category", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("POST_CATEGORY_NOT_FOUND");
+    expect(res.body.data).to.equal(null);
+  });
+}

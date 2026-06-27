@@ -1,0 +1,32 @@
+meta {
+  name: 10 Tag Name Too Long
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/tags
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "slug": "boundary-tag-name-too-long-{{runId}}"
+  }
+}
+
+tests {
+  test("tag name length is validated", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("TAG_NAME_TOO_LONG");
+    expect(res.body.data).to.equal(null);
+  });
+}

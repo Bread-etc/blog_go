@@ -1,0 +1,24 @@
+meta {
+  name: 13 Cleanup Category
+  type: http
+  seq: 13
+}
+
+delete {
+  url: {{baseUrl}}/api/categories/{{postCategoryId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+tests {
+  test("post category cleaned", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.code).to.equal(200);
+    expect(res.body.errorCode).to.equal("");
+  });
+}
+

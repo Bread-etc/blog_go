@@ -1,0 +1,20 @@
+meta {
+  name: 24 Post Keyword Too Long
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/api/posts?page=1&pageSize=10&keyword=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  body: none
+  auth: none
+}
+
+tests {
+  test("post list rejects keyword above max", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("POST_KEYWORD_TOO_LONG");
+    expect(res.body.data).to.equal(null);
+  });
+}

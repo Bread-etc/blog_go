@@ -1,0 +1,38 @@
+meta {
+  name: 30 Post Update Not Found
+  type: http
+  seq: 30
+}
+
+put {
+  url: {{baseUrl}}/api/posts/not-found-post-id-{{runId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Boundary Update Not Found {{runId}}",
+    "content": "content",
+    "summary": "",
+    "slug": "boundary-update-not-found-{{runId}}",
+    "cover": "",
+    "categoryId": "{{boundaryCategoryId}}",
+    "tagIds": ["{{boundaryTagId}}"],
+    "isPublished": true
+  }
+}
+
+tests {
+  test("post update not found returns 404", function () {
+    expect(res.status).to.equal(404);
+    expect(res.body.code).to.equal(404);
+    expect(res.body.errorCode).to.equal("POST_NOT_FOUND");
+    expect(res.body.data).to.equal(null);
+  });
+}

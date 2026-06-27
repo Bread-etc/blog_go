@@ -1,0 +1,63 @@
+meta {
+  name: 02 Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "{{adminUsername}}",
+    "password": "{{encryptedPassword}}"
+  }
+}
+
+script:pre-request {
+  const crypto = require("crypto");
+  const publicKey = bru.getVar("publicKey");
+  const password = bru.getEnvVar("adminPassword") || "admin";
+
+  if (!publicKey) {
+    throw new Error("publicKey is missing. Run 01 Get Public Key first.");
+  }
+
+  const encryptedPassword = crypto.publicEncrypt(
+    {
+      key: publicKey,
+      padding: crypto.constants.RSA_PKCS1_PADDING
+    },
+    Buffer.from(password, "utf8")
+  ).toString("base64");
+
+  bru.setVar("encryptedPassword", encryptedPassword);
+  req.setBody({
+    username: bru.getEnvVar("adminUsername") || "admin",
+    password: encryptedPassword
+  });
+}
+
+script:post-response {
+  if (res.status === 200 && res.body && res.body.data) {
+    bru.setVar("token", res.body.data.token);
+  }
+}
+
+tests {
+  test("login succeeds and stores token", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.code).to.equal(200);
+    expect(res.body.errorCode).to.equal("");
+    expect(res.body.data.token).to.be.a("string").and.not.empty;
+    expect(res.body.data.user.role).to.equal("admin");
+  });
+}
+

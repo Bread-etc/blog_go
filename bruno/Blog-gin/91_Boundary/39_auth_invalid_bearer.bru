@@ -1,0 +1,24 @@
+meta {
+  name: 39 Auth Invalid Bearer
+  type: http
+  seq: 39
+}
+
+get {
+  url: {{baseUrl}}/api/auth/profile
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer invalid-token
+}
+
+tests {
+  test("invalid bearer token is unauthorized", function () {
+    expect(res.status).to.equal(401);
+    expect(res.body.code).to.equal(401);
+    expect(res.body.errorCode).to.equal("UNAUTHORIZED");
+    expect(res.body.data).to.equal(null);
+  });
+}

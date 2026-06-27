@@ -1,0 +1,22 @@
+meta {
+  name: 01 Get Config
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/config
+  body: none
+  auth: none
+}
+
+tests {
+  test("config returns object", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.code).to.equal(200);
+    expect(res.body.errorCode).to.equal("");
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data).to.have.property("githubUrl");
+  });
+}
+
