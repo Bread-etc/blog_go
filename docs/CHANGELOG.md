@@ -1,12 +1,31 @@
 # 变更日志 (Changelog)
 
+## [v1.1.1] - 2026-06-28
+
+### ✨ 新增功能 Features
+
+- 完成 DTO、Model、Service、Controller、Middleware 和 Router 的整体重构，接口字段统一为 `camelCase`
+- 新增 Bruno CLI 接口测试集合，覆盖主流程、负向用例和边界用例，默认自动化测试共 84 个请求
+- 统一响应结构和业务错误码，修复 Post、Category、Tag 等模块的参数校验、重复数据和关联约束错误语义
+- 文章列表`tagIds`同时支持重复参数和 CSV 两种传参方式
+
+### 🛠️ 问题修复 Bugfixes
+
+- 修复`Binding`错误模块识别过于宽泛导致的错误码误判问题
+- 修复`Docker Compose`环境变量无法覆盖 Go 配置的问题，支持通过环境变量注入服务端口和数据库配置
+
+### 🧪 单元测试 Test
+
+- 核心 Service 层单元测试已补齐，`go test ./...`通过
+- Bruno 全量接口测试已通过
+
 ## [v1.1.0] - 2026-04-10
 
 ### ✨ 新增功能 Features
 
-- 新增 `/api/dashboard/stats` 接口，提供文章、分类、标签、友链的总量及月增幅(MoM)百分比统计
-- 新增 `/api/dashboard/top-posts` 接口，支持后台呈现按浏览量倒序排列的热门文章列表
-- 文章列表接口新增对 `tag_ids` 的多标签交集查询支持
+- 新增`/api/dashboard/stats`接口，提供文章、分类、标签、友链的总量及月增幅(MoM)百分比统计
+- 新增`/api/dashboard/top-posts`接口，支持后台呈现按浏览量倒序排列的热门文章列表
+- 文章列表接口新增对`tag_ids`的多标签交集查询支持
 
 ### 🛡️ 代码重构 Refactor
 
