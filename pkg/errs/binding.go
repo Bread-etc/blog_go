@@ -46,27 +46,37 @@ func FromBinding(err error) *Error {
 
 func fromValidationError(fe validator.FieldError) *Error {
 	namespace := fe.StructNamespace()
+	root := validationRoot(namespace)
 	field := fe.StructField()
 	tag := fe.Tag()
 
-	switch {
-	case strings.Contains(namespace, "TopPostsQueryReq"):
+	switch root {
+	case "TopPostsQueryReq":
 		return fromAggregateValidationError(field, tag)
-	case strings.Contains(namespace, "Category"):
+	case "CreateCategoryReq", "UpdateCategoryReq":
 		return fromCategoryValidationError(field, tag)
-	case strings.Contains(namespace, "Tag"):
+	case "CreateTagReq", "UpdateTagReq":
 		return fromTagValidationError(field, tag)
-	case strings.Contains(namespace, "Post"):
+	case "CreatePostReq", "UpdatePostReq", "PostListQueryReq":
 		return fromPostValidationError(field, tag)
-	case strings.Contains(namespace, "Link"):
+	case "CreateLinkReq", "UpdateLinkReq":
 		return fromLinkValidationError(field, tag)
-	case strings.Contains(namespace, "Config"):
+	case "SaveConfigReq":
 		return fromConfigValidationError(field, tag)
-	case strings.Contains(namespace, "LoginReq"), strings.Contains(namespace, "ChangePassword"):
+	case "LoginReq", "ChangePasswordReq":
 		return fromUserValidationError(field, tag)
 	default:
 		return New(http.StatusBadRequest, CodeInvalidParams, "invalid request parameters")
 	}
+}
+
+func validationRoot(namespace string) string {
+	root, _, ok := strings.Cut(namespace, ".")
+	if !ok {
+		return namespace
+	}
+
+	return root
 }
 
 func fromAggregateValidationError(field string, tag string) *Error {
