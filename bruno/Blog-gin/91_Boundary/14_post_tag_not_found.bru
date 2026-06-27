@@ -1,0 +1,38 @@
+meta {
+  name: 14 Post Tag Not Found
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/posts
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Boundary Missing Tag {{runId}}",
+    "content": "content",
+    "summary": "",
+    "slug": "boundary-missing-tag-{{runId}}",
+    "cover": "",
+    "categoryId": "{{boundaryCategoryId}}",
+    "tagIds": ["not-found-tag-{{runId}}"],
+    "isPublished": true
+  }
+}
+
+tests {
+  test("post rejects missing tag", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("POST_TAG_NOT_FOUND");
+    expect(res.body.data).to.equal(null);
+  });
+}

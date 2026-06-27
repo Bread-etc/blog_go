@@ -1,0 +1,32 @@
+meta {
+  name: 05 Category Name Too Long
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/categories
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "slug": "boundary-category-name-too-long-{{runId}}"
+  }
+}
+
+tests {
+  test("category name length is validated", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("CATEGORY_NAME_TOO_LONG");
+    expect(res.body.data).to.equal(null);
+  });
+}

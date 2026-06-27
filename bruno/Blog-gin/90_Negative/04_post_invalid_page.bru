@@ -1,0 +1,21 @@
+meta {
+  name: 04 Post Invalid Page
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/posts?page=0
+  body: none
+  auth: none
+}
+
+tests {
+  test("invalid post page returns business error", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("POST_PAGE_INVALID");
+    expect(res.body.data).to.equal(null);
+  });
+}
+

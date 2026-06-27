@@ -1,0 +1,32 @@
+meta {
+  name: 07 Category Update Not Found
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/api/categories/not-found-category-{{runId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Boundary Category Not Found {{runId}}",
+    "slug": "boundary-category-not-found-{{runId}}"
+  }
+}
+
+tests {
+  test("category update not found returns 404", function () {
+    expect(res.status).to.equal(404);
+    expect(res.body.code).to.equal(404);
+    expect(res.body.errorCode).to.equal("CATEGORY_NOT_FOUND");
+    expect(res.body.data).to.equal(null);
+  });
+}

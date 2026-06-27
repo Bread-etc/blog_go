@@ -1,0 +1,39 @@
+meta {
+  name: 01 Create Tag
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/tags
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Auto Tag {{runId}}",
+    "slug": "auto-tag-{{runId}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body && res.body.data) {
+    bru.setVar("tagId", res.body.data.id);
+  }
+}
+
+tests {
+  test("tag created", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.code).to.equal(200);
+    expect(res.body.errorCode).to.equal("");
+    expect(res.body.data.id).to.be.a("string").and.not.empty;
+  });
+}
+

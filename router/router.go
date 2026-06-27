@@ -2,6 +2,7 @@ package router
 
 import (
 	"go-blog/middleware"
+	"go-blog/pkg/errs"
 	"go-blog/pkg/response"
 	"net/http"
 
@@ -17,23 +18,23 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	r.Use(middleware.RequestLog())
 
 	// 注册业务路由
-	UserRoutes(r, db)
+	AuthRouter(r, db)
 	PostRouter(r, db)
 	CategoryRouter(r, db)
 	TagRouter(r, db)
 	LinkRouter(r, db)
 	ConfigRouter(r, db)
-	AggregateRouter(r, db)
+	DashboardRouter(r, db)
 
 	r.GET("/api/health", func(c *gin.Context) {
 		// 检查数据库连接
 		sqlDB, err := db.DB()
 		if err != nil {
-			response.Error(c, http.StatusInternalServerError, "Database handle failed")
+			response.Error(c, errs.New(http.StatusInternalServerError, errs.CodeDatabaseUnavailable, "database handle failed"))
 			return
 		}
 		if err := sqlDB.Ping(); err != nil {
-			response.Error(c, http.StatusInternalServerError, "Database connection failed")
+			response.Error(c, errs.New(http.StatusInternalServerError, errs.CodeDatabaseUnavailable, "database connection failed"))
 			return
 		}
 

@@ -1,0 +1,38 @@
+meta {
+  name: 06 Config Invalid Email
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/config
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Invalid Config {{runId}}",
+    "subtitle": "",
+    "description": "",
+    "keywords": "",
+    "author": "",
+    "email": "not-email",
+    "githubUrl": "https://github.com/example"
+  }
+}
+
+tests {
+  test("invalid config email returns business error", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("CONFIG_EMAIL_INVALID");
+    expect(res.body.data).to.equal(null);
+  });
+}
+

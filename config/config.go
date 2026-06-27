@@ -57,7 +57,36 @@ func InitConfig() {
 		log.Fatalf("❌ Failed to unmarshal config: %v", err)
 	}
 
-	// env overridesd
+	// env overrides
+	if port := firstEnvInt("SERVER_PORT", "APP_PORT"); port != 0 {
+		AppConfig.Server.Port = port
+	}
+
+	if host := firstEnvString("DATABASE_HOST", "DB_HOST"); host != "" {
+		AppConfig.Database.Host = host
+	}
+	if port := firstEnvInt("DATABASE_PORT", "DB_PORT"); port != 0 {
+		AppConfig.Database.Port = port
+	}
+	if user := firstEnvString("DATABASE_USER", "DB_USER"); user != "" {
+		AppConfig.Database.User = user
+	}
+	if password := firstEnvString("DATABASE_PASSWORD", "DB_PASSWORD"); password != "" {
+		AppConfig.Database.Password = password
+	}
+	if name := firstEnvString("DATABASE_NAME", "DB_NAME"); name != "" {
+		AppConfig.Database.Name = name
+	}
+	if charset := firstEnvString("DATABASE_CHARSET", "DB_CHARSET"); charset != "" {
+		AppConfig.Database.Charset = charset
+	}
+	if loc := firstEnvString("DATABASE_LOC", "DB_LOC"); loc != "" {
+		AppConfig.Database.Loc = loc
+	}
+	if parseTime, ok := firstEnvBool("DATABASE_PARSE_TIME", "DB_PARSE_TIME"); ok {
+		AppConfig.Database.ParseTime = parseTime
+	}
+
 	if s := viper.GetString("JWT_SECRET"); s != "" {
 		AppConfig.JWT.Secret = s
 	}
@@ -69,4 +98,34 @@ func InitConfig() {
 	}
 
 	log.Println("✅ Configuration file loaded successfully!")
+}
+
+func firstEnvString(keys ...string) string {
+	for _, key := range keys {
+		if value := viper.GetString(key); value != "" {
+			return value
+		}
+	}
+
+	return ""
+}
+
+func firstEnvInt(keys ...string) int {
+	for _, key := range keys {
+		if value := viper.GetInt(key); value != 0 {
+			return value
+		}
+	}
+
+	return 0
+}
+
+func firstEnvBool(keys ...string) (bool, bool) {
+	for _, key := range keys {
+		if value := viper.GetString(key); value != "" {
+			return viper.GetBool(key), true
+		}
+	}
+
+	return false, false
 }

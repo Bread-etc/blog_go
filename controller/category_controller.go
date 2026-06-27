@@ -1,12 +1,10 @@
 package controller
 
 import (
-	"fmt"
 	"go-blog/dto"
-	"go-blog/pkg/logger"
+	"go-blog/pkg/errs"
 	"go-blog/pkg/response"
 	service "go-blog/services"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,8 +21,7 @@ func NewCategoryController(categoryService service.ICategoryService) *CategoryCo
 func (cc *CategoryController) GetCategoryList(c *gin.Context) {
 	list, err := cc.CategoryService.GetCategoryList()
 	if err != nil {
-		logger.Log.Errorf("GetCategoryList service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.ErrorFrom(c, err)
 		return
 	}
 
@@ -35,15 +32,13 @@ func (cc *CategoryController) GetCategoryList(c *gin.Context) {
 func (cc *CategoryController) CreateCategory(c *gin.Context) {
 	var req dto.CreateCategoryReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("CreateCategory bind failed: %v", err)
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, errs.FromBinding(err))
 		return
 	}
 
 	category, err := cc.CategoryService.CreateCategory(&req)
 	if err != nil {
-		logger.Log.Errorf("CreateCategory service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.ErrorFrom(c, err)
 		return
 	}
 
@@ -53,16 +48,15 @@ func (cc *CategoryController) CreateCategory(c *gin.Context) {
 // UpdateCategory 更新分类
 func (cc *CategoryController) UpdateCategory(c *gin.Context) {
 	id := c.Param("id")
+
 	var req dto.UpdateCategoryReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("UpdateCategory bind failed: %v", err)
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, errs.FromBinding(err))
 		return
 	}
 
 	if err := cc.CategoryService.UpdateCategory(id, &req); err != nil {
-		logger.Log.Errorf("UpdateCategory service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update category: %v", err))
+		response.ErrorFrom(c, err)
 		return
 	}
 
@@ -72,9 +66,9 @@ func (cc *CategoryController) UpdateCategory(c *gin.Context) {
 // DeleteCategory 删除分类
 func (cc *CategoryController) DeleteCategory(c *gin.Context) {
 	id := c.Param("id")
+
 	if err := cc.CategoryService.DeleteCategory(id); err != nil {
-		logger.Log.Errorf("DeleteCategory service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete category: %v", err))
+		response.ErrorFrom(c, err)
 		return
 	}
 

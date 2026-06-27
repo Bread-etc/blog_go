@@ -1,11 +1,12 @@
 package middleware
 
 import (
-	"fmt"
-	"go-blog/pkg/logger"
 	"net/http"
-	"net/http/httputil"
 	"runtime/debug"
+
+	"go-blog/pkg/errs"
+	"go-blog/pkg/logger"
+	"go-blog/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,14 +16,29 @@ func Recovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				httpRequest, _ := httputil.DumpRequest(c.Request, false)
 				// 记录 Panic 原因和堆栈信息
-				logger.Log.Errorf("[Recovery] panic recovered:\n%s\n%v\nStack: %s", string(httpRequest), err, string(debug.Stack()))
-				// 返回 500 错误
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"code":    500,
-					"message": fmt.Sprintf("Internal Server Error: %v", err),
-				})
+				if logger.Log != nil {
+					path := c.FullPath()
+					if path == "" {
+						path = c.Request.URL.Path
+					}
+
+					logger.Log.Errorw("panic recovered",
+						"requestId", c.Writer.Header().Get("X-Request-ID"),
+						"method", c.Request.Method,
+						"path", path,
+						"uri", c.Request.RequestURI,
+						"clientIP", c.ClientIP(),
+						"userID", c.GetString("userID"),
+						"panic", err,
+						"stack", string(debug.Stack()),
+					)
+				}
+				// 如果响应没有写出去，才返回统一 500 JSON
+				if !c.Writer.Written() {
+					response.Error(c, errs.New(http.StatusInternalServerError, errs.CodeInternalError, "internal server error"))
+				}
+				c.Abort()
 			}
 		}()
 		c.Next()

@@ -1,0 +1,32 @@
+meta {
+  name: 12 Tag Update Not Found
+  type: http
+  seq: 12
+}
+
+put {
+  url: {{baseUrl}}/api/tags/not-found-tag-{{runId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Boundary Tag Not Found {{runId}}",
+    "slug": "boundary-tag-not-found-{{runId}}"
+  }
+}
+
+tests {
+  test("tag update not found returns 404", function () {
+    expect(res.status).to.equal(404);
+    expect(res.body.code).to.equal(404);
+    expect(res.body.errorCode).to.equal("TAG_NOT_FOUND");
+    expect(res.body.data).to.equal(null);
+  });
+}

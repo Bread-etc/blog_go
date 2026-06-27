@@ -1,0 +1,34 @@
+meta {
+  name: 32 Link Name Too Long
+  type: http
+  seq: 32
+}
+
+post {
+  url: {{baseUrl}}/api/links
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "url": "https://example.com",
+    "description": "",
+    "sort": 0
+  }
+}
+
+tests {
+  test("link name length is validated", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("LINK_NAME_TOO_LONG");
+    expect(res.body.data).to.equal(null);
+  });
+}

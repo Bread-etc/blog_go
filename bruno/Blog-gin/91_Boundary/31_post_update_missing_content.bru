@@ -1,0 +1,37 @@
+meta {
+  name: 31 Post Update Missing Content
+  type: http
+  seq: 31
+}
+
+put {
+  url: {{baseUrl}}/api/posts/{{boundaryPostId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Boundary Missing Content {{runId}}",
+    "summary": "",
+    "slug": "{{boundaryPostSlug}}",
+    "cover": "",
+    "categoryId": "{{boundaryCategoryId}}",
+    "tagIds": ["{{boundaryTagId}}"],
+    "isPublished": true
+  }
+}
+
+tests {
+  test("post PUT requires content", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("POST_CONTENT_REQUIRED");
+    expect(res.body.data).to.equal(null);
+  });
+}

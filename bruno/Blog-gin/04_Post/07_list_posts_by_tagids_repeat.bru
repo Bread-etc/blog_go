@@ -1,0 +1,23 @@
+meta {
+  name: 07 List Posts By TagIds Repeat
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/posts?tagIds={{postTagIdA}}&tagIds={{postTagIdB}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("repeated tagIds query works", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.code).to.equal(200);
+    expect(res.body.errorCode).to.equal("");
+    expect(res.body.data.list).to.be.an("array");
+    expect(res.body.data.list.some((item) => item.id === bru.getVar("postId"))).to.equal(true);
+    bru.setVar("repeatTagIdsTotal", String(res.body.data.total));
+  });
+}
+

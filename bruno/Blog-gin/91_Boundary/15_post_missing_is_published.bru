@@ -1,0 +1,37 @@
+meta {
+  name: 15 Post Missing IsPublished
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/posts
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Boundary Missing Publish {{runId}}",
+    "content": "content",
+    "summary": "",
+    "slug": "boundary-missing-publish-{{runId}}",
+    "cover": "",
+    "categoryId": "{{boundaryCategoryId}}",
+    "tagIds": ["{{boundaryTagId}}"]
+  }
+}
+
+tests {
+  test("post create requires isPublished", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("POST_IS_PUBLISHED_REQUIRED");
+    expect(res.body.data).to.equal(null);
+  });
+}

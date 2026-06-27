@@ -1,0 +1,47 @@
+meta {
+  name: 09 Update Post
+  type: http
+  seq: 9
+}
+
+put {
+  url: {{baseUrl}}/api/posts/{{postId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Auto Post Updated {{runId}}",
+    "content": "Auto post content updated by Bruno CLI.",
+    "summary": "Auto post summary updated",
+    "slug": "auto-post-updated-{{runId}}",
+    "cover": "",
+    "categoryId": "{{postCategoryId}}",
+    "tagIds": ["{{postTagIdA}}", "{{postTagIdB}}"],
+    "isPublished": false
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body && res.body.data) {
+    bru.setVar("postSlug", res.body.data.slug);
+  }
+}
+
+tests {
+  test("post updated with full PUT semantics", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.code).to.equal(200);
+    expect(res.body.errorCode).to.equal("");
+    expect(res.body.data.id).to.equal(bru.getVar("postId"));
+    expect(res.body.data.slug).to.equal(`auto-post-updated-${bru.getVar("runId")}`);
+    expect(res.body.data.isPublished).to.equal(false);
+  });
+}
+

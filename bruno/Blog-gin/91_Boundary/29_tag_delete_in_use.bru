@@ -1,0 +1,24 @@
+meta {
+  name: 29 Tag Delete In Use
+  type: http
+  seq: 29
+}
+
+delete {
+  url: {{baseUrl}}/api/tags/{{boundaryTagId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+tests {
+  test("tag used by post cannot be deleted", function () {
+    expect(res.status).to.equal(409);
+    expect(res.body.code).to.equal(409);
+    expect(res.body.errorCode).to.equal("TAG_IN_USE");
+    expect(res.body.data).to.equal(null);
+  });
+}

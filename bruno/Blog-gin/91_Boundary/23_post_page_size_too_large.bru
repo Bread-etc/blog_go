@@ -1,0 +1,20 @@
+meta {
+  name: 23 Post Page Size Too Large
+  type: http
+  seq: 23
+}
+
+get {
+  url: {{baseUrl}}/api/posts?page=1&pageSize=51
+  body: none
+  auth: none
+}
+
+tests {
+  test("post list rejects pageSize above max", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("POST_PAGE_SIZE_INVALID");
+    expect(res.body.data).to.equal(null);
+  });
+}

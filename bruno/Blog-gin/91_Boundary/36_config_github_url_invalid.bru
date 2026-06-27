@@ -1,0 +1,37 @@
+meta {
+  name: 36 Config Github URL Invalid
+  type: http
+  seq: 36
+}
+
+put {
+  url: {{baseUrl}}/api/config
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "title": "Boundary Blog",
+    "subtitle": "Boundary subtitle",
+    "description": "Boundary description",
+    "keywords": "boundary",
+    "author": "Boundary",
+    "email": "admin@example.com",
+    "githubUrl": "not-a-url"
+  }
+}
+
+tests {
+  test("config github url is validated", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("CONFIG_GITHUB_URL_INVALID");
+    expect(res.body.data).to.equal(null);
+  });
+}

@@ -1,0 +1,25 @@
+meta {
+  name: 07 Dashboard Limit Invalid
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/dashboard/top-posts?limit=11
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+tests {
+  test("invalid dashboard limit returns business error", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.code).to.equal(400);
+    expect(res.body.errorCode).to.equal("AGGREGATE_TOP_POSTS_LIMIT_INVALID");
+    expect(res.body.data).to.equal(null);
+  });
+}
+

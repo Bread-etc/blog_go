@@ -1,13 +1,12 @@
 package controller
 
 import (
-	"fmt"
+	"strings"
+
 	"go-blog/dto"
-	"go-blog/model"
-	"go-blog/pkg/logger"
+	"go-blog/pkg/errs"
 	"go-blog/pkg/response"
 	service "go-blog/services"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,110 +23,54 @@ func NewPostController(postService service.IPostService) *PostController {
 func (pc *PostController) CreatePost(c *gin.Context) {
 	var req dto.CreatePostReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("CreatePost bind failed: %v", err)
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, errs.FromBinding(err))
 		return
 	}
 
-	userID := c.GetString("userID")
-
-	isPublished := true
-	if req.IsPublished != nil {
-		isPublished = *req.IsPublished
-	}
-
-	post := &model.Post{
-		Title:       req.Title,
-		Content:     req.Content,
-		Summary:     req.Summary,
-		Slug:        req.Slug,
-		Cover:       req.Cover,
-		CategoryID:  req.CategoryID,
-		AuthorID:    userID,
-		IsPublished: &isPublished,
-	}
-
-	if err := pc.PostService.CreatePost(post, req.TagIDs); err != nil {
-		logger.Log.Errorf("CreatePost service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to create post: %v", err))
+	post, err := pc.PostService.CreatePost(&req)
+	if err != nil {
+		response.ErrorFrom(c, err)
 		return
 	}
 
-	response.Success(c, gin.H{"id": post.ID})
+	response.Success(c, post)
 }
 
 // UpdatePost 更新文章
 func (pc *PostController) UpdatePost(c *gin.Context) {
 	id := c.Param("id")
+
 	var req dto.UpdatePostReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warnf("UpdatePost bind failed: %v", err)
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, errs.FromBinding(err))
 		return
 	}
 
-	post, err := pc.PostService.GetPostByID(id)
+	post, err := pc.PostService.UpdatePost(id, &req)
 	if err != nil {
-		logger.Log.Errorf("UpdatePost service error: %v", err)
-		response.Error(c, http.StatusNotFound, fmt.Sprintf("Post not found: %v", err))
+		response.ErrorFrom(c, err)
 		return
 	}
 
-	// 鉴权
-	currentUserID := c.GetString("userID")
-	currentUserRole := c.GetString("role")
-
-	if post.AuthorID != currentUserID && currentUserRole != "admin" {
-		logger.Log.Errorf("Permission denied")
-		response.Error(c, http.StatusForbidden, "Permission denied")
-		return
-	}
-
-	// 更新字段
-	if req.Title != "" {
-		post.Title = req.Title
-	}
-	if req.Content != "" {
-		post.Content = req.Content
-	}
-	if req.Slug != "" {
-		post.Slug = req.Slug
-	}
-	if req.Summary != nil {
-		post.Summary = *req.Summary
-	}
-	if req.CategoryID != "" {
-		post.CategoryID = req.CategoryID
-	}
-	if req.Cover != nil {
-		post.Cover = *req.Cover
-	}
-	if req.IsPublished != nil {
-		post.IsPublished = req.IsPublished
-	}
-
-	if err := pc.PostService.UpdatePost(post, req.TagIDs); err != nil {
-		logger.Log.Warnf("UpdatePost service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update post: %v", err))
-		return
-	}
-
-	response.Success(c, nil)
+	response.Success(c, post)
 }
 
 // GetPostList 获取文章列表
 func (pc *PostController) GetPostList(c *gin.Context) {
-	var req dto.PostListQueryReq
+	req := dto.PostListQueryReq{
+		Page:     1,
+		PageSize: 10,
+	}
+
 	if err := c.ShouldBindQuery(&req); err != nil {
-		logger.Log.Warnf("GetPostList bind failed: %v", err)
-		response.Error(c, http.StatusBadRequest, fmt.Sprintf("Invalid query parameters: %v", err))
+		response.Error(c, errs.FromBinding(err))
 		return
 	}
+	normalizePostListTagIDs(c, &req)
 
 	posts, total, err := pc.PostService.GetPostList(&req)
 	if err != nil {
-		logger.Log.Errorf("GetPostList service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to fetch posts: %v", err))
+		response.ErrorFrom(c, err)
 		return
 	}
 
@@ -139,20 +82,21 @@ func (pc *PostController) GetPostList(c *gin.Context) {
 	})
 }
 
-// GetPostDetail 获取详情
+// GetPostDetail 获取文章详情
 func (pc *PostController) GetPostDetail(c *gin.Context) {
-	slug := c.Param("slug") // 使用 slug 获取
+	slug := c.Param("slug")
+
 	post, err := pc.PostService.GetPostBySlug(slug)
 	if err != nil {
-		logger.Log.Warnf("Post not found: %v", err)
-		response.Error(c, http.StatusNotFound, fmt.Sprintf("Post not found: %v", err))
+		response.ErrorFrom(c, err)
 		return
 	}
 
-	// 增加浏览量
-	go func() {
-		_ = pc.PostService.IncrementView(post.ID)
-	}()
+	if err := pc.PostService.IncrementView(post.ID); err != nil {
+		_ = c.Error(err)
+	} else {
+		post.Views++
+	}
 
 	response.Success(c, post)
 }
@@ -160,11 +104,33 @@ func (pc *PostController) GetPostDetail(c *gin.Context) {
 // DeletePost 删除文章
 func (pc *PostController) DeletePost(c *gin.Context) {
 	id := c.Param("id")
+
 	if err := pc.PostService.DeletePost(id); err != nil {
-		logger.Log.Errorf("DeletePost service error: %v", err)
-		response.Error(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete post: %v", err))
+		response.ErrorFrom(c, err)
 		return
 	}
 
 	response.Success(c, nil)
+}
+
+func normalizePostListTagIDs(c *gin.Context, req *dto.PostListQueryReq) {
+	values, ok := c.GetQueryArray("tagIds")
+	if !ok {
+		return
+	}
+
+	req.TagIDs = splitQueryList(values)
+}
+
+func splitQueryList(values []string) []string {
+	items := make([]string, 0, len(values))
+
+	for _, value := range values {
+		parts := strings.SplitSeq(value, ",")
+		for part := range parts {
+			items = append(items, strings.TrimSpace(part))
+		}
+	}
+
+	return items
 }
