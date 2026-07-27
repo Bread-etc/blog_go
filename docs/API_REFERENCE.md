@@ -84,13 +84,14 @@
 
 ## Post
 
-| 方法     | 路径               | 鉴权 | 说明                       |
-| -------- | ------------------ | ---- | -------------------------- |
-| `GET`    | `/api/posts`       | 否   | 文章列表                   |
-| `GET`    | `/api/posts/:slug` | 否   | 文章详情，成功后浏览量加一 |
-| `POST`   | `/api/posts`       | 是   | 创建文章                   |
-| `PUT`    | `/api/posts/:id`   | 是   | 全量更新文章               |
-| `DELETE` | `/api/posts/:id`   | 是   | 删除文章                   |
+| 方法     | 路径                   | 鉴权 | 说明         |
+| -------- | ---------------------- | ---- | ------------ |
+| `GET`    | `/api/posts`           | 否   | 文章列表     |
+| `GET`    | `/api/posts/:slug`     | 否   | 文章详情     |
+| `POST`   | `/api/posts/:id/views` | 否   | 浏览量加一   |
+| `POST`   | `/api/posts`           | 是   | 创建文章     |
+| `PUT`    | `/api/posts/:id`       | 是   | 全量更新文章 |
+| `DELETE` | `/api/posts/:id`       | 是   | 删除文章     |
 
 列表 Query：
 
@@ -101,7 +102,9 @@
 | `keyword`     | string   | -      | 最长 `100`，搜索标题和摘要 |
 | `categoryId`  | string   | -      | 分类 ID                    |
 | `tagIds`      | string[] | -      | 支持重复参数和 CSV         |
-| `isPublished` | boolean  | -      | 发布状态                   |
+| `isPublished` | boolean  | -      | 发布状态；不传时查询全部   |
+
+前台文章列表应显式传递 `isPublished=true`；后台管理列表不传时查询全部文章，传递 `false` 时仅查询未发布文章。
 
 `tagIds` 示例：
 
@@ -110,6 +113,14 @@ GET /api/posts?tagIds=tag-a&tagIds=tag-b
 GET /api/posts?tagIds=tag-a,tag-b
 GET /api/posts?tagIds=tag-a&tagIds=tag-b,tag-c
 ```
+
+获取文章详情不会自动增加浏览量。前台成功展示文章后，调用以下无请求体接口记录一次浏览；后台编辑文章时无需调用：
+
+```http
+POST /api/posts/:id/views
+```
+
+成功响应中的 `data` 为 `null`。
 
 创建/更新请求：
 

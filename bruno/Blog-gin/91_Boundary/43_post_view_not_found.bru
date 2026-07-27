@@ -1,0 +1,20 @@
+meta {
+  name: 43 Post View Not Found
+  type: http
+  seq: 43
+}
+
+post {
+  url: {{baseUrl}}/api/posts/not-found-post-id-{{runId}}/views
+  body: none
+  auth: none
+}
+
+tests {
+  test("incrementing a missing post view returns 404", function () {
+    expect(res.status).to.equal(404);
+    expect(res.body.code).to.equal(404);
+    expect(res.body.errorCode).to.equal("POST_NOT_FOUND");
+    expect(res.body.data).to.equal(null);
+  });
+}

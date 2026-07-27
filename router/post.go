@@ -18,6 +18,7 @@ func PostRouter(r *gin.Engine, db *gorm.DB) {
 		// 公开接口
 		postGroup.GET("", postController.GetPostList)
 		postGroup.GET("/:slug", postController.GetPostDetail)
+		postGroup.POST("/:id/views", postController.IncrementPostView)
 
 		// 认证接口
 		authGroup := postGroup.Group("")

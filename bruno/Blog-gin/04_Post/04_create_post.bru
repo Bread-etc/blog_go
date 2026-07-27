@@ -32,6 +32,7 @@ script:post-response {
   if (res.status === 200 && res.body && res.body.data) {
     bru.setVar("postId", res.body.data.id);
     bru.setVar("postSlug", res.body.data.slug);
+    bru.setVar("createdPostViews", String(res.body.data.views));
   }
 }
 
@@ -42,6 +43,7 @@ tests {
     expect(res.body.errorCode).to.equal("");
     expect(res.body.data.id).to.be.a("string").and.not.empty;
     expect(res.body.data.slug).to.equal(`auto-post-${bru.getVar("runId")}`);
+    expect(res.body.data.views).to.equal(0);
     expect(res.body.data.isPublished).to.equal(true);
     expect(res.body.data.category.id).to.equal(bru.getVar("postCategoryId"));
     expect(res.body.data.tags.map((item) => item.id)).to.include(bru.getVar("postTagIdA"));

@@ -605,10 +605,11 @@ func TestPostService_IncrementView(t *testing.T) {
 
 	require.NoError(t, db.Model(&model.Post{}).Where("id = ?", post.ID).UpdateColumn("views", 10).Error)
 	require.NoError(t, svc.IncrementView(post.ID))
+	require.NoError(t, svc.IncrementView(post.ID))
 
 	var saved model.Post
 	require.NoError(t, db.First(&saved, "id = ?", post.ID).Error)
-	assert.Equal(t, uint(11), saved.Views)
+	assert.Equal(t, uint(12), saved.Views)
 }
 
 func TestPostService_IncrementView_NotFound(t *testing.T) {

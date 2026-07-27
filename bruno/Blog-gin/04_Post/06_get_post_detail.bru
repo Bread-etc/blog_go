@@ -19,5 +19,9 @@ tests {
     expect(res.body.data.slug).to.equal(bru.getVar("postSlug"));
     expect(res.body.data.content).to.be.a("string").and.not.empty;
   });
+
+  test("getting post detail does not increment views", function () {
+    expect(String(res.body.data.views)).to.equal(bru.getVar("createdPostViews"));
+  });
 }
 
