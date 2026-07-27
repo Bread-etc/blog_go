@@ -50,7 +50,7 @@ bru run --env Local --sandbox developer --exclude-tags manual
 - `01_Auth`：获取公钥、登录、获取当前用户信息，以及手动改密请求。
 - `02_Category`：分类 CRUD 主流程。
 - `03_Tag`：标签 CRUD 主流程。
-- `04_Post`：文章依赖数据创建、文章 CRUD、`tagIds` 重复参数和 CSV 参数查询、依赖数据清理。
+- `04_Post`：文章依赖数据创建、文章 CRUD、详情与浏览量拆分、`tagIds` 重复参数和 CSV 参数查询、依赖数据清理。
 - `05_Link`：友情链接 CRUD 主流程。
 - `06_Config`：站点配置获取、更新、再次获取。
 - `07_Dashboard`：后台统计卡片和热门文章排行。
@@ -69,6 +69,7 @@ bru run --env Local --sandbox developer --exclude-tags manual
 - 业务冲突：重复分类名称、重复分类 slug、重复标签名称、重复标签 slug、重复文章 slug。
 - 关联约束：文章分类不存在、文章标签不存在、分类被文章引用时禁止删除、标签被文章引用时禁止删除。
 - 列表查询：分页参数、关键词长度、`tagIds` 重复参数、`tagIds` CSV 参数、重复/空 tag id。
+- 浏览量：详情查询不自增、显式记录浏览后只增加一次、不存在的文章返回 404。
 - Dashboard：热门文章 limit 最小值和最大值校验。
 
 ## 测试数据策略

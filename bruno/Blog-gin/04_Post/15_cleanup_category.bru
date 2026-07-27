@@ -1,11 +1,11 @@
 meta {
-  name: 12 Cleanup Tag B
+  name: 15 Cleanup Category
   type: http
-  seq: 12
+  seq: 15
 }
 
 delete {
-  url: {{baseUrl}}/api/tags/{{postTagIdB}}
+  url: {{baseUrl}}/api/categories/{{postCategoryId}}
   body: none
   auth: none
 }
@@ -15,7 +15,7 @@ headers {
 }
 
 tests {
-  test("post tag b cleaned", function () {
+  test("post category cleaned", function () {
     expect(res.status).to.equal(200);
     expect(res.body.code).to.equal(200);
     expect(res.body.errorCode).to.equal("");
