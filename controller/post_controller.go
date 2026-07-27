@@ -92,13 +92,19 @@ func (pc *PostController) GetPostDetail(c *gin.Context) {
 		return
 	}
 
-	if err := pc.PostService.IncrementView(post.ID); err != nil {
-		_ = c.Error(err)
-	} else {
-		post.Views++
+	response.Success(c, post)
+}
+
+// IncrementPostView 增加文章浏览量
+func (pc *PostController) IncrementPostView(c *gin.Context) {
+	id := c.Param("id")
+
+	if err := pc.PostService.IncrementView(id); err != nil {
+		response.ErrorFrom(c, err)
+		return
 	}
 
-	response.Success(c, post)
+	response.Success(c, nil)
 }
 
 // DeletePost 删除文章
