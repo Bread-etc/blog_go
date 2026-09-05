@@ -11,8 +11,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./caddy_data:/data
       - ./caddy_config:/config
-      # 前端部署时，将 dist 目录挂载进去
-      # - ./frontend/dist:/srv/dist
+      - ./frontend/dist:/srv/dist
     depends_on:
       - server
     networks:
