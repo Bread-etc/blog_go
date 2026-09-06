@@ -1,4 +1,6 @@
 hastur23.top {
+    encode zstd gzip
+
     # 后端 API
     handle /api/* {
         reverse_proxy server:8080
